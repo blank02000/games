@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="com.progist.cyberdefense.puzzle"
+          version="1.0"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="
+            http://www.imsproject.org/xsd/imscp_rootv1p1p2
+            imscp_rootv1p1p2.xsd
+            http://www.adlnet.org/xsd/adlcp_rootv1p2
+            adlcp_rootv1p2.xsd">
+
+  <!-- ═══════════════════════════════════════════════════════
+       METADATA
+       ═══════════════════════════════════════════════════════ -->
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ORGANISATIONS
+       ═══════════════════════════════════════════════════════ -->
+  <organizations default="cyber_defense_puzzle_org">
+    <organization identifier="cyber_defense_puzzle_org">
+      <title>Cyber Defense: Security Puzzle Training</title>
+
+      <item identifier="item_puzzle" identifierref="resource_puzzle">
+        <title>Cyber Defense Analyst – Visual Puzzle Simulation</title>
+        <adlcp:masteryscore>60</adlcp:masteryscore>
+      </item>
+
+    </organization>
+  </organizations>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RESOURCES
+       ═══════════════════════════════════════════════════════ -->
+  <resources>
+    <resource identifier="resource_puzzle"
+              type="webcontent"
+              adlcp:scormtype="sco"
+              href="index.html">
+
+      <!-- Root page -->
+      <file href="index.html"/>
+
+      <!-- Scripts -->
+      <file href="scrom_api_wrapper.js"/>
+      <file href="js/bundle.js"/>
+      <file href="js/scorm.js"/>
+
+      <!-- Styles -->
+      <file href="css/style.css"/>
+
+      <!-- Audio -->
+      <file href="assets/audio/bg.wav"/>
+      <file href="assets/audio/snap.mp3"/>
+      <file href="assets/audio/success.wav"/>
+
+      <!-- Level images -->
+      <file href="assets/images/Phisical security/level1.png"/>
+      <file href="assets/images/Phisical security/level2.png"/>
+      <file href="assets/images/Phisical security/level3.png"/>
+
+      <!-- Level videos -->
+      <file href="assets/videos/level1.mp4"/>
+      <file href="assets/videos/level2.mp4"/>
+      <file href="assets/videos/level3.mp4"/>
+
+    </resource>
+  </resources>
+
+</manifest>

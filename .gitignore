@@ -1,0 +1,18 @@
+# ── Large build artefacts ──────────────────────────────────────
+index.zip
+*.zip
+
+# ── Node / build tools (if ever used) ─────────────────────────
+node_modules/
+dist/
+.cache/
+
+# ── OS junk ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor settings ───────────────────────────────────────────
+.vscode/
+*.swp
+*.swo

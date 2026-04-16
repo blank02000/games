@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cyber Defense: Security Puzzle Training</title>
+  <meta name="description" content="SOC Security Training – reconstruct fragmented security incidents in this visual puzzle simulation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- =========================================================
+       AMBIENT BACKGROUND CANVAS (particles)
+       ======================================================= -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- =========================================================
+       PERSISTENT HUD (visible during game screen)
+       ======================================================= -->
+  <header id="hud" class="hud" aria-label="Mission HUD">
+    <div class="hud-left">
+      <div id="level-badge" class="level-badge" hidden>
+        <span id="level-label" class="level-label">Module 1</span>
+        <span id="level-topic" class="level-topic">–</span>
+      </div>
+    </div>
+    <div class="hud-center">
+      <span id="status-text" class="status-text">STANDBY</span>
+    </div>
+    <div class="hud-right">
+      <button id="btn-mute" class="icon-btn" aria-label="Mute audio">
+        <span id="mute-icon">S</span>
+      </button>
+      <button id="btn-theme" class="icon-btn" aria-label="Switch theme">
+        <span id="theme-icon">L</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       SNAP FLASH OVERLAY
+       ======================================================= -->
+  <div id="snap-flash" class="snap-flash" aria-hidden="true"></div>
+
+  <!-- =========================================================
+       APP SHELL
+       ======================================================= -->
+  <div id="app">
+
+    <!-- ─────────────────────────────────────────────────────
+         SCREEN: WELCOME
+         ───────────────────────────────────────────────────── -->
+    <section id="screen-welcome" class="screen screen--active" aria-label="Welcome screen">
+      <div class="welcome-wrap">
+        <div class="welcome-logo" aria-hidden="true">🛡️</div>
+        <h1 class="welcome-title">Cyber Defense<br><span class="brand-accent">Analyst</span></h1>
+        <p class="welcome-sub">
+          Security incidents have fragmented critical visual evidence.
+          Reconstruct each scene to identify the threat vector and restore the system.
+        </p>
+
+        <div class="module-preview-grid" aria-hidden="true">
+          <div class="module-chip">Module 1 · Unauthorized Access</div>
+          <div class="module-chip">Module 2 · Physical Security</div>
+          <div class="module-chip">Module 3 · Zero Trust &amp; MFA</div>
+        </div>
+
+        <button id="btn-start" class="btn btn--primary btn--lg">
+          <span>Start Mission</span>
+          <span class="btn-arrow">→</span>
+        </button>
+        <button id="btn-how-to-play" class="btn btn--ghost">How to Play</button>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+         SCREEN: GAME
+         ───────────────────────────────────────────────────── -->
+    <section id="screen-game" class="screen" hidden aria-label="Active puzzle">
+
+      <!-- Info bar -->
+      <div class="game-infobar">
+        <div class="infobar-item">
+          <span class="infobar-key">Level</span>
+          <span id="info-level" class="infobar-val">–</span>
+        </div>
+        <div class="infobar-item">
+          <span class="infobar-key">Pieces</span>
+          <span id="info-pieces" class="infobar-val">–</span>
+        </div>
+        <div class="infobar-item">
+          <span class="infobar-key">Threat</span>
+          <span id="info-threat" class="infobar-val">–</span>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-row" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Puzzle completion">
+        <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-meta">
+        <span id="pieces-remaining" class="pieces-remaining">– remaining</span>
+        <span id="hud-percent" class="hud-percent">0%</span>
+      </div>
+
+      <!-- Objective / interaction copy -->
+      <div class="game-copy">
+        <p id="stage-topic" class="stage-topic">–</p>
+        <p id="objective-copy" class="objective-copy">Align every fragment with its matching board position.</p>
+        <p id="interaction-hint" class="interaction-hint">Drag pieces from the tray and release them near the matching slot.</p>
+        <p id="hud-progress-copy" class="progress-copy">0 of 0 fragments locked</p>
+      </div>
+
+      <!-- Puzzle area -->
+      <div class="game-layout">
+
+        <!-- Board -->
+        <div class="board-frame">
+          <div id="puzzle-board" class="puzzle-board" role="grid" aria-label="Puzzle board"></div>
+        </div>
+
+        <!-- Tray -->
+        <div class="tray-panel" aria-label="Piece tray">
+          <div class="tray-header">
+            <span class="tray-label">Fragments</span>
+          </div>
+          <div id="pieces-tray" class="pieces-tray" role="list" aria-label="Available pieces"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+         SCREEN: LEVEL COMPLETE (Carousel)
+         ───────────────────────────────────────────────────── -->
+    <section id="screen-complete" class="screen" hidden aria-label="Level complete">
+      <div class="complete-wrap">
+
+        <!-- Carousel slides -->
+        <div class="carousel" aria-label="Completion slides">
+
+          <!-- Slide 1: Solved image reveal -->
+          <div class="carousel-slide carousel-slide--active" role="tabpanel">
+            <div class="slide-icon" aria-hidden="true">✅</div>
+            <h2 class="slide-title">Threat Neutralized</h2>
+            <p class="slide-sub">You have restored the security scene.</p>
+            <div class="reveal-frame">
+              <img id="reveal-image" src="" alt="" class="reveal-img" />
+            </div>
+          </div>
+
+          <!-- Slide 2: Security tip + video -->
+          <div class="carousel-slide" role="tabpanel">
+            <div class="slide-icon" aria-hidden="true">📋</div>
+            <h2 class="slide-title">Security Insight</h2>
+            <p id="tip-text" class="tip-text"></p>
+            <div class="video-wrap">
+              <video
+                id="reward-video"
+                class="reward-video"
+                playsinline
+                loop
+                aria-label="Incident replay video"
+              ></video>
+              <button id="btn-video-mute" class="video-mute-btn" aria-label="Mute video" title="Mute / Unmute video">
+                🔊
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /.carousel -->
+
+        <!-- Carousel dots -->
+        <div class="carousel-dots" role="tablist" aria-label="Slide navigation">
+          <button class="carousel-dot carousel-dot--active" role="tab" aria-pressed="true" aria-label="Slide 1"></button>
+          <button class="carousel-dot" role="tab" aria-pressed="false" aria-label="Slide 2"></button>
+        </div>
+
+        <div class="complete-actions">
+          <button id="btn-next" class="btn btn--primary">Continue</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+         SCREEN: FINAL / ALL COMPLETE
+         ───────────────────────────────────────────────────── -->
+    <section id="screen-final" class="screen" hidden aria-label="Mission complete">
+      <div class="final-wrap">
+        <div class="final-icon" aria-hidden="true">🏆</div>
+        <h2 class="final-title">Mission Accomplished</h2>
+        <p class="final-sub">You have successfully analysed all security incidents and restored every module.</p>
+        <div class="score-display">
+          <span class="score-label">Score Achieved</span>
+          <span id="final-score-display" class="score-value">100%</span>
+        </div>
+        <button id="btn-restart" class="btn btn--primary btn--lg">Replay Simulation</button>
+        <button id="btn-close-game" class="btn btn--ghost">Close</button>
+      </div>
+    </section>
+
+  </div><!-- /#app -->
+
+  <!-- =========================================================
+       TUTORIAL MODAL
+       ======================================================= -->
+  <div id="tutorial-modal" class="tutorial-modal" aria-modal="true" aria-hidden="true" role="dialog" aria-label="How to play">
+    <div class="tutorial-modal-overlay"></div>
+    <div class="tutorial-modal-content">
+      <button id="btn-close-tutorial" class="modal-close-btn" aria-label="Close tutorial">✕</button>
+      <h3 class="modal-title">How to Play</h3>
+      <ul class="modal-steps">
+        <li><strong>Drag</strong> a piece from the <em>Fragments</em> tray.</li>
+        <li>Move it over the puzzle board and <strong>release</strong> near the correct slot.</li>
+        <li>On touch devices, <strong>tap</strong> a piece to select it, then <strong>tap a slot</strong> to place it.</li>
+        <li>Pieces can be <strong>swapped</strong> between slots by dragging one onto another.</li>
+        <li>Complete all fragments to unlock the security insight and advance to the next module.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       HIDDEN AUDIO ELEMENTS
+       ======================================================= -->
+  <audio id="sfx-bg"      src="assets/audio/bg.wav"      loop  preload="none" aria-hidden="true"></audio>
+  <audio id="sfx-snap"    src="assets/audio/snap.mp3"          preload="none" aria-hidden="true"></audio>
+  <audio id="sfx-success" src="assets/audio/success.wav"       preload="none" aria-hidden="true"></audio>
+
+  <!-- SCORM API Wrapper (must load first – provides pipwerks global) -->
+  <script src="scrom_api_wrapper.js"></script>
+
+  <!-- Game bundle (pre-built from src/) -->
+  <script src="js/bundle.js"></script>
+
+  <!-- SCORM + API integration layer (must load after bundle.js) -->
+  <script src="js/scorm.js"></script>
+
+</body>
+</html>
