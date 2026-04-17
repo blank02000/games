@@ -1137,14 +1137,24 @@ function spawnLevel(lvl) {
         }
     }
 
+    const baseSize = 600;
+    const scale = Math.pow(1.3, lvl - 1);
+    const cSize = baseSize * scale;
+    const yPos = GROUND_Y - cSize + 30; // Aligned to character ground floor
+
     const gEl = document.createElement('div');
     gEl.className = 'final-castle';
+    gEl.style.width = `${cSize}px`;
+    gEl.style.height = `${cSize}px`;
+    gEl.style.backgroundSize = 'contain';
+    gEl.style.backgroundRepeat = 'no-repeat';
+    gEl.style.backgroundPosition = 'bottom center';
     goalC.appendChild(gEl);
     state.goal = {
         x: 800 + QUESTIONS_PER_LEVEL * spacing, // Reduced distance
-        y: GROUND_Y - 570, // Aligned to character ground floor
-        w: 600,
-        h: 600,
+        y: yPos,
+        w: cSize,
+        h: cSize,
         vx: 0,
         vy: 0,
         el: gEl
