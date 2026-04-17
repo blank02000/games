@@ -1,243 +1,236 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Cyber Defense: Security Puzzle Training</title>
-  <meta name="description" content="SOC Security Training – reconstruct fragmented security incidents in this visual puzzle simulation." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cyber Castle Adventure</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="scorm_api_wrapper.js" defer></script>
 </head>
-<body>
 
-  <!-- =========================================================
-       AMBIENT BACKGROUND CANVAS (particles)
-       ======================================================= -->
-  <canvas id="bg-canvas" aria-hidden="true"></canvas>
-
-  <!-- =========================================================
-       PERSISTENT HUD (visible during game screen)
-       ======================================================= -->
-  <header id="hud" class="hud" aria-label="Mission HUD">
-    <div class="hud-left">
-      <div id="level-badge" class="level-badge" hidden>
-        <span id="level-label" class="level-label">Module 1</span>
-        <span id="level-topic" class="level-topic">–</span>
-      </div>
-    </div>
-    <div class="hud-center">
-      <span id="status-text" class="status-text">STANDBY</span>
-    </div>
-    <div class="hud-right">
-      <button id="btn-mute" class="icon-btn" aria-label="Mute audio">
-        <span id="mute-icon">S</span>
-      </button>
-      <button id="btn-theme" class="icon-btn" aria-label="Switch theme">
-        <span id="theme-icon">L</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- =========================================================
-       SNAP FLASH OVERLAY
-       ======================================================= -->
-  <div id="snap-flash" class="snap-flash" aria-hidden="true"></div>
-
-  <!-- =========================================================
-       APP SHELL
-       ======================================================= -->
-  <div id="app">
-
-    <!-- ─────────────────────────────────────────────────────
-         SCREEN: WELCOME
-         ───────────────────────────────────────────────────── -->
-    <section id="screen-welcome" class="screen screen--active" aria-label="Welcome screen">
-      <div class="welcome-wrap">
-        <div class="welcome-logo" aria-hidden="true">🛡️</div>
-        <h1 class="welcome-title">Cyber Defense<br><span class="brand-accent">Analyst</span></h1>
-        <p class="welcome-sub">
-          Security incidents have fragmented critical visual evidence.
-          Reconstruct each scene to identify the threat vector and restore the system.
-        </p>
-
-        <div class="module-preview-grid" aria-hidden="true">
-          <div class="module-chip">Module 1 · Unauthorized Access</div>
-          <div class="module-chip">Module 2 · Physical Security</div>
-          <div class="module-chip">Module 3 · Zero Trust &amp; MFA</div>
+<body id="body">
+    <div id="game-container">
+        <div id="bg-far" class="parallax-layer"></div>
+        <div id="world">
+            <div id="effects-container"></div>
+            <div id="ground" class="ground"></div>
+            <div id="obstacles-container"></div>
+            <div id="enemies-container"></div>
+            <div id="prizes-container"></div>
+            <div id="final-goal-container"></div>
+            <div id="player" class="player"></div>
         </div>
-
-        <button id="btn-start" class="btn btn--primary btn--lg">
-          <span>Start Mission</span>
-          <span class="btn-arrow">→</span>
-        </button>
-        <button id="btn-how-to-play" class="btn btn--ghost">How to Play</button>
-      </div>
-    </section>
-
-    <!-- ─────────────────────────────────────────────────────
-         SCREEN: GAME
-         ───────────────────────────────────────────────────── -->
-    <section id="screen-game" class="screen" hidden aria-label="Active puzzle">
-
-      <!-- Info bar -->
-      <div class="game-infobar">
-        <div class="infobar-item">
-          <span class="infobar-key">Level</span>
-          <span id="info-level" class="infobar-val">–</span>
-        </div>
-        <div class="infobar-item">
-          <span class="infobar-key">Pieces</span>
-          <span id="info-pieces" class="infobar-val">–</span>
-        </div>
-        <div class="infobar-item">
-          <span class="infobar-key">Threat</span>
-          <span id="info-threat" class="infobar-val">–</span>
-        </div>
-      </div>
-
-      <!-- Progress bar -->
-      <div class="progress-row" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Puzzle completion">
-        <div id="progress-fill" class="progress-fill" style="width:0%"></div>
-      </div>
-      <div class="progress-meta">
-        <span id="pieces-remaining" class="pieces-remaining">– remaining</span>
-        <span id="hud-percent" class="hud-percent">0%</span>
-      </div>
-
-      <!-- Objective / interaction copy -->
-      <div class="game-copy">
-        <p id="stage-topic" class="stage-topic">–</p>
-        <p id="objective-copy" class="objective-copy">Align every fragment with its matching board position.</p>
-        <p id="interaction-hint" class="interaction-hint">Drag pieces from the tray and release them near the matching slot.</p>
-        <p id="hud-progress-copy" class="progress-copy">0 of 0 fragments locked</p>
-      </div>
-
-      <!-- Puzzle area -->
-      <div class="game-layout">
-
-        <!-- Board -->
-        <div class="board-frame">
-          <div id="puzzle-board" class="puzzle-board" role="grid" aria-label="Puzzle board"></div>
-        </div>
-
-        <!-- Tray -->
-        <div class="tray-panel" aria-label="Piece tray">
-          <div class="tray-header">
-            <span class="tray-label">Fragments</span>
-          </div>
-          <div id="pieces-tray" class="pieces-tray" role="list" aria-label="Available pieces"></div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ─────────────────────────────────────────────────────
-         SCREEN: LEVEL COMPLETE (Carousel)
-         ───────────────────────────────────────────────────── -->
-    <section id="screen-complete" class="screen" hidden aria-label="Level complete">
-      <div class="complete-wrap">
-
-        <!-- Carousel slides -->
-        <div class="carousel" aria-label="Completion slides">
-
-          <!-- Slide 1: Solved image reveal -->
-          <div class="carousel-slide carousel-slide--active" role="tabpanel">
-            <div class="slide-icon" aria-hidden="true">✅</div>
-            <h2 class="slide-title">Threat Neutralized</h2>
-            <p class="slide-sub">You have restored the security scene.</p>
-            <div class="reveal-frame">
-              <img id="reveal-image" src="" alt="" class="reveal-img" />
+        <div class="hud-top-left">
+            <div class="hud-pills">
+                <div id="hud-pill-score" class="pill-score">
+                    <div id="hud-score-icon" class="score-icon"></div>
+                    <span id="score-val">0</span>
+                </div>
+                <div class="pill-mp">
+                    <span style="color:#e06eff">⚡</span>
+                    <div class="mp-bar-bg">
+                        <div id="mp-bar-fill" class="mp-bar-fill"></div>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <!-- Slide 2: Security tip + video -->
-          <div class="carousel-slide" role="tabpanel">
-            <div class="slide-icon" aria-hidden="true">📋</div>
-            <h2 class="slide-title">Security Insight</h2>
-            <p id="tip-text" class="tip-text"></p>
-            <div class="video-wrap">
-              <video
-                id="reward-video"
-                class="reward-video"
-                playsinline
-                loop
-                aria-label="Incident replay video"
-              ></video>
-              <button id="btn-video-mute" class="video-mute-btn" aria-label="Mute video" title="Mute / Unmute video">
-                🔊
-              </button>
+            <div class="lives-pill">
+                <span class="lives-label">LIVES</span>
+                <div class="hearts-flex">
+                    <div id="heart-1" class="heart"></div>
+                    <div id="heart-2" class="heart"></div>
+                    <div id="heart-3" class="heart"></div>
+                </div>
             </div>
-          </div>
-
-        </div><!-- /.carousel -->
-
-        <!-- Carousel dots -->
-        <div class="carousel-dots" role="tablist" aria-label="Slide navigation">
-          <button class="carousel-dot carousel-dot--active" role="tab" aria-pressed="true" aria-label="Slide 1"></button>
-          <button class="carousel-dot" role="tab" aria-pressed="false" aria-label="Slide 2"></button>
         </div>
-
-        <div class="complete-actions">
-          <button id="btn-next" class="btn btn--primary">Continue</button>
+        <div class="hud-top-right">
+            <div id="btn-mute" class="pill-hud-btn"><span>🔊</span> SOUND</div>
+            <div id="btn-quit" class="pill-hud-btn pill-quit"><span>🚪</span> QUIT</div>
+            <div id="pill-how" class="pill-how"><span>❓</span> HOW TO PLAY</div>
         </div>
-
-      </div>
-    </section>
-
-    <!-- ─────────────────────────────────────────────────────
-         SCREEN: FINAL / ALL COMPLETE
-         ───────────────────────────────────────────────────── -->
-    <section id="screen-final" class="screen" hidden aria-label="Mission complete">
-      <div class="final-wrap">
-        <div class="final-icon" aria-hidden="true">🏆</div>
-        <h2 class="final-title">Mission Accomplished</h2>
-        <p class="final-sub">You have successfully analysed all security incidents and restored every module.</p>
-        <div class="score-display">
-          <span class="score-label">Score Achieved</span>
-          <span id="final-score-display" class="score-value">100%</span>
+        <div id="toast-container" class="toast-container"></div>
+        <div class="controls">
+            <div class="ctrl-group">
+                <div id="btn-left" class="ctrl-btn">←</div>
+                <div id="btn-right" class="ctrl-btn">→</div>
+            </div>
+            <div class="ctrl-group">
+                <div id="btn-jump" class="ctrl-btn">▲</div>
+            </div>
         </div>
-        <button id="btn-restart" class="btn btn--primary btn--lg">Replay Simulation</button>
-        <button id="btn-close-game" class="btn btn--ghost">Close</button>
-      </div>
-    </section>
-
-  </div><!-- /#app -->
-
-  <!-- =========================================================
-       TUTORIAL MODAL
-       ======================================================= -->
-  <div id="tutorial-modal" class="tutorial-modal" aria-modal="true" aria-hidden="true" role="dialog" aria-label="How to play">
-    <div class="tutorial-modal-overlay"></div>
-    <div class="tutorial-modal-content">
-      <button id="btn-close-tutorial" class="modal-close-btn" aria-label="Close tutorial">✕</button>
-      <h3 class="modal-title">How to Play</h3>
-      <ul class="modal-steps">
-        <li><strong>Drag</strong> a piece from the <em>Fragments</em> tray.</li>
-        <li>Move it over the puzzle board and <strong>release</strong> near the correct slot.</li>
-        <li>On touch devices, <strong>tap</strong> a piece to select it, then <strong>tap a slot</strong> to place it.</li>
-        <li>Pieces can be <strong>swapped</strong> between slots by dragging one onto another.</li>
-        <li>Complete all fragments to unlock the security insight and advance to the next module.</li>
-      </ul>
     </div>
-  </div>
 
-  <!-- =========================================================
-       HIDDEN AUDIO ELEMENTS
-       ======================================================= -->
-  <audio id="sfx-bg"      src="assets/audio/bg.wav"      loop  preload="none" aria-hidden="true"></audio>
-  <audio id="sfx-snap"    src="assets/audio/snap.mp3"          preload="none" aria-hidden="true"></audio>
-  <audio id="sfx-success" src="assets/audio/success.wav"       preload="none" aria-hidden="true"></audio>
+    <!-- Modals -->
+    <!-- Registration Form Modal (shown FIRST) -->
+    <div id="register-modal" class="modal active" style="z-index:6000;">
+        <div class="modal-content" style="max-width:480px;">
+            <h2 class="game-title" style="font-size:2rem; margin-bottom:10px;">⚔️ Sentinel Registry</h2>
+            <p style="color:#aaa; font-size:0.95rem; margin-bottom:24px;">Complete your profile to begin the mission.
+            </p>
+            <div class="reg-form">
+                <div class="reg-field">
+                    <label for="reg-name">Full Name <span style="color:#ff5e00;">*</span></label>
+                    <input id="reg-name" type="text" placeholder="e.g. Alex Kumar" autocomplete="name" />
+                    <span class="reg-error" id="err-name"></span>
+                </div>
+                <div class="reg-field">
+                    <label for="reg-email">Official Email <span style="color:#ff5e00;">*</span></label>
+                    <input id="reg-email" type="email" placeholder="name@company.com" autocomplete="email" />
+                    <span class="reg-hint">No personal emails (Gmail, Yahoo, Outlook, etc.)</span>
+                    <span class="reg-error" id="err-email"></span>
+                </div>
+                <div class="reg-field">
+                    <label for="reg-org">Organisation <span style="color:#ff5e00;">*</span></label>
+                    <input id="reg-org" type="text" placeholder="e.g. Prophish Technologies"
+                        autocomplete="organization" />
+                    <span class="reg-error" id="err-org"></span>
+                </div>
+                <button id="reg-submit-btn" class="btn-main" style="width:100%; margin-top:10px;">Enter the
+                    Castle</button>
+            </div>
+        </div>
+    </div>
 
-  <!-- SCORM API Wrapper (must load first – provides pipwerks global) -->
-  <script src="scrom_api_wrapper.js"></script>
+    <div id="intro-modal" class="modal">
+        <div class="modal-content">
+            <h1 class="game-title">Cyber Castle</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 30px; color: #ccc;">Embark on a digital quest to secure the
+                ancient data citadels. Mastery of security is thy only hope.</p>
+            <button id="start-adventure-btn" class="btn-main">Begin Journey</button>
+        </div>
+    </div>
 
-  <!-- Game bundle (pre-built from src/) -->
-  <script src="js/bundle.js"></script>
+    <div id="level-select-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 30px; letter-spacing: 2px;">SELECT DATA CITADEL</h2>
+            <div class="level-card-container">
+                <button id="prev-castle" class="arrow-btn" aria-label="Previous castle">‹</button>
+                <div class="castle-card active" data-lvl="1">
+                    <div class="castle-img"
+                        style="background-image: url('https://prophish-uploads.s3.ap-south-1.amazonaws.com/Wallpapers/0/ORS97Z0.jpg')">
+                    </div>
+                    <h3 style="color:var(--royal-gold)">The Cloud Keep</h3>
+                    <button class="explore-btn btn-main" aria-label="Explore level 1">Explore</button>
+                </div>
+                <div class="castle-card" data-lvl="2">
+                    <div class="castle-img"
+                        style="background-image: url('https://prophish-uploads.s3.ap-south-1.amazonaws.com/Wallpapers/891n9pzq/Castel_BG2.jpg')">
+                    </div>
+                    <h3 style="color:var(--royal-gold)">Shadow Fortress</h3>
+                    <button class="explore-btn btn-main" disabled aria-label="Level 2 locked">Locked</button>
+                </div>
+                <div class="castle-card" data-lvl="3">
+                    <div class="castle-img"
+                        style="background-image: url('https://prophish-uploads.s3.ap-south-1.amazonaws.com/Wallpapers/6968jdn2/Game_Backgrounds_Beach.jpg')">
+                    </div>
+                    <h3 style="color:var(--royal-gold)">Azure Bastion</h3>
+                    <button class="explore-btn btn-main" disabled aria-label="Level 3 locked">Locked</button>
+                </div>
+                <button id="next-castle" class="arrow-btn" aria-label="Next castle">›</button>
+            </div>
+        </div>
+    </div>
 
-  <!-- SCORM + API integration layer (must load after bundle.js) -->
-  <script src="js/scorm.js"></script>
+    <div id="question-modal" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div id="question-text">Analyzing...</div>
+            <div id="options-container" class="options-grid"></div>
+            <button id="accuracy-assist-btn" class="skill-btn"><span>🪄</span> ACCURACY ASSIST (50 MP)</button>
+        </div>
+    </div>
 
+    <div id="level-up-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="victory-title" class="game-title" style="font-size: 2.5rem;">VICTORY</h2>
+            <div id="level-up-text" style="margin-bottom: 20px;">Thou hast secured the citadel!</div>
+            <div id="level-up-progress"
+                style="font-weight: bold; margin-bottom: 30px; font-size: 1.1rem; color: var(--royal-gold);"></div>
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <button id="retry-btn" class="btn-main" style="background: #444; display:none;">Retry</button>
+                <button id="victory-btn" class="btn-main">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="final-analysis-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 class="game-title" style="font-size: 2.2rem;">DEBRIEF COMPLETE</h2>
+            <div id="rank-text"
+                style="color: var(--royal-gold); font-size: 1.3rem; font-weight: bold; text-transform: uppercase;">
+                Sentinel Grade: S</div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Total Score</div>
+                    <div id="final-total-score" class="stat-value">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Average Accuracy</div>
+                    <div id="final-avg-accuracy" class="stat-value">0%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Citadels Secured</div>
+                    <div id="final-secured-count" class="stat-value">0/3</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Threats Neutered</div>
+                    <div id="final-enemies-defeated" class="stat-value">0</div>
+                </div>
+            </div>
+
+            <div style="text-align: left; margin-top: 10px;">
+                <div class="stat-label">Achievements Unlocked</div>
+                <div class="achievement-container" id="achievement-grid">
+                    <div class="achievement-badge" id="ach-1">Citadel Defender</div>
+                    <div class="achievement-badge" id="ach-2">Cyber Legend</div>
+                    <div class="achievement-badge" id="ach-3">Perfect Protocol</div>
+                    <div class="achievement-badge" id="ach-4">Bug Squasher</div>
+                    <div class="achievement-badge" id="ach-5">Sentinel Elite</div>
+                </div>
+            </div>
+
+            <button id="restart-btn" class="btn-main" style="margin-top: 30px; width: 100%;">Return to Command</button>
+        </div>
+    </div>
+
+    <div id="skill-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--mp-purple); margin-bottom:20px;">NEW SKILL UNLOCKED!</h2>
+            <div style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                <span style="font-size: 3rem;">🪄</span><br>
+                <strong>Accuracy Assist:</strong> Thou canst now spend 50 MP during challenges to eliminate two false
+                paths, leaving only the truth!
+            </div>
+            <button id="skill-ok-btn" class="btn-main">Understood</button>
+        </div>
+    </div>
+
+    <div id="how-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--royal-gold); margin-bottom:20px;">THE SENTINEL'S PATH</h2>
+            <div style="text-align: left; font-size: 1rem; line-height: 1.5; margin-bottom: 25px;">
+                • Use <strong>ARROWS</strong> or <strong>WASD</strong> to move.<br>
+                • <strong>SPACE</strong> or <strong>UP</strong> to jump.<br>
+                • Collect <strong>? BOXES</strong> and answer security questions to earn Score.<br>
+                • Stomp on <strong>VIRUS BUGS</strong> to earn MP and clear the path.<br>
+                • Spend <strong>MP</strong> during questions for help.<br>
+                • Use thy <strong>Sentinel Vision</strong> (Wider Field of View) to spot traps early!<br>
+                • Secure all 3 Citadels to become a Legend!
+            </div>
+            <button id="close-how-btn" class="btn-main">I am ready</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+        }
+    }
+    </script>
+
+    <script src="index.js"></script>
 </body>
+
 </html>

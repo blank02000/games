@@ -1,0 +1,202 @@
+[
+  {
+    "question": "What is tailgating in physical security?",
+    "options": [
+      "Following someone's car too closely on the road",
+      "An unauthorized person sneaking into a secured area behind an authorized person",
+      "Attaching a GPS tracker to a vehicle",
+      "Sharing login credentials with a colleague"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is the best way to prevent tailgating at a secure entrance?",
+    "options": [
+      "Place a 'No Entry' sign at the door",
+      "Use a mantrap or airlock that allows only one person at a time",
+      "Install faster doors",
+      "Ask guards to watch the cameras"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "A well-dressed person follows you through a badge-access door without scanning. What should you do?",
+    "options": [
+      "Hold the door open since they look like staff",
+      "Let them in and report later",
+      "Politely ask them to badge in or direct them to security",
+      "Ignore them as it is not your responsibility"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "Which of the following best describes a 'mantrap'?",
+    "options": [
+      "A trap for catching insects in offices",
+      "A small room with two doors where only one opens at a time to verify identity",
+      "A locked cabinet for storing passwords",
+      "A firewall rule blocking unauthorized users"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Why is wearing a visible ID badge important in a workplace?",
+    "options": [
+      "It is just a company tradition",
+      "It helps identify authorized personnel and spot unauthorized visitors",
+      "It gives you access to all systems",
+      "It replaces the need for passwords"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What should you do if you notice a visitor wandering in a restricted area without an escort?",
+    "options": [
+      "Assume they have permission",
+      "Give them directions to where they need to go",
+      "Report them to security immediately",
+      "Ask them if they need the Wi-Fi password"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is the principle of least privilege in data access?",
+    "options": [
+      "Giving all employees admin rights for convenience",
+      "Granting users only the minimum access needed to perform their job",
+      "Allowing managers to access all employee data",
+      "Restricting internet access for junior staff only"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is a data access policy?",
+    "options": [
+      "A rule about how much data employees can download",
+      "A set of rules defining who can access, modify, or share organizational data",
+      "A policy restricting social media use at work",
+      "Guidelines for backing up personal files"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following is an example of proper data access control?",
+    "options": [
+      "Sharing your login with a colleague while on leave",
+      "Only HR staff can view employee salary records",
+      "Everyone in the office can access the customer database",
+      "Storing passwords in a shared spreadsheet"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What should happen to an employee's data access when they leave the company?",
+    "options": [
+      "Access should remain active for 6 months",
+      "They can keep read-only access",
+      "All access should be revoked immediately on their last day",
+      "A colleague can take over their account"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is a 'clean desk policy'?",
+    "options": [
+      "Keeping your desk physically tidy for appearance",
+      "A policy requiring sensitive documents and devices to be locked away when not in use",
+      "A rule about not eating at your desk",
+      "Guidelines about desk ergonomics"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Why should printed documents with sensitive data be shredded instead of binned?",
+    "options": [
+      "To save recycling space",
+      "To meet office cleanliness standards",
+      "To prevent unauthorized people from retrieving and reading discarded information",
+      "Company printers require it"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is role-based access control (RBAC)?",
+    "options": [
+      "Giving access based on how long someone has worked at the company",
+      "Assigning data access permissions based on an employee's job role",
+      "Allowing all employees to access data based on seniority",
+      "Controlling physical door access using ID cards"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following is a strong password?",
+    "options": [
+      "password123",
+      "JohnSmith1990",
+      "G#7kP!mZ2@qL",
+      "QWERTY"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is the recommended minimum length for a secure password?",
+    "options": [
+      "4 characters",
+      "6 characters",
+      "8 characters",
+      "12 or more characters"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "question": "Why should you never reuse the same password across multiple accounts?",
+    "options": [
+      "It slows down login speed",
+      "If one account is breached, all accounts using that password become vulnerable",
+      "Websites do not allow duplicate passwords",
+      "It makes password recovery harder"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is a password manager?",
+    "options": [
+      "A person who manages company passwords",
+      "A notebook where you write down all passwords",
+      "A secure software tool that stores and generates strong passwords",
+      "A browser extension that autofills usernames only"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What should you do if you suspect your password has been compromised?",
+    "options": [
+      "Wait to see if anything suspicious happens",
+      "Tell your colleagues your new password",
+      "Change it immediately and enable multi-factor authentication",
+      "Delete the account permanently"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is multi-factor authentication (MFA)?",
+    "options": [
+      "Using multiple passwords for one account",
+      "Verifying identity using two or more different factors such as password plus OTP",
+      "Logging in from multiple devices simultaneously",
+      "Having a manager approve every login"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following is a bad password practice?",
+    "options": [
+      "Using a password manager",
+      "Enabling two-factor authentication",
+      "Writing your password on a sticky note attached to your monitor",
+      "Using a unique password for each account"
+    ],
+    "correctIndex": 2
+  }
+]

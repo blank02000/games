@@ -1,0 +1,202 @@
+[
+  {
+    "question": "What is social engineering in cybersecurity?",
+    "options": [
+      "Building social media apps",
+      "Manipulating people psychologically to reveal confidential information",
+      "Engineering social networks",
+      "Creating user-friendly software"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following is a social engineering technique?",
+    "options": [
+      "Brute force attack",
+      "SQL injection",
+      "Pretexting",
+      "Port scanning"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is pretexting?",
+    "options": [
+      "Sending texts before calling",
+      "Creating a fabricated scenario to manipulate someone into sharing information",
+      "A type of network protocol",
+      "Pre-scheduling social media posts"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is baiting in social engineering?",
+    "options": [
+      "Fishing in a lake",
+      "Luring victims with something enticing like a free USB drive or prize",
+      "Sending repeated login attempts",
+      "Installing firewalls"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "A stranger calls claiming to be from IT support and asks for your password. What should you do?",
+    "options": [
+      "Give the password since they are IT",
+      "Refuse and verify through official channels",
+      "Give a fake password",
+      "Hang up without saying anything"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is 'quid pro quo' in social engineering?",
+    "options": [
+      "A legal term for contracts",
+      "Offering a service in exchange for information or access",
+      "A type of ransomware",
+      "Sharing passwords among friends"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is tailgating (piggybacking) in the context of social engineering?",
+    "options": [
+      "Following someone's car too closely",
+      "Gaining unauthorized physical access by following an authorized person",
+      "Copying someone's social media posts",
+      "Tracking someone's location online"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which psychological tactic do social engineers most often exploit?",
+    "options": [
+      "Logic and reasoning",
+      "Urgency, fear, and authority",
+      "Technical knowledge",
+      "Complex mathematics"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is 'watering hole' attack?",
+    "options": [
+      "Attacking water utility systems",
+      "Compromising websites that the target group frequently visits",
+      "Flooding a server with requests",
+      "Poisoning DNS records"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Why is social engineering often more effective than technical hacking?",
+    "options": [
+      "It uses advanced software tools",
+      "It exploits human psychology and trust, which are harder to patch",
+      "It requires more technical skill",
+      "It always goes undetected"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "An unknown person claims to be a new employee and asks you to let them into a restricted area. What should you do?",
+    "options": [
+      "Let them in to be polite",
+      "Direct them to reception or security to verify identity",
+      "Give them a visitor badge immediately",
+      "Ignore them"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is 'shoulder surfing'?",
+    "options": [
+      "Surfing the internet on a mobile device",
+      "Observing someone's screen or keyboard to steal information",
+      "A type of phishing email",
+      "Accessing someone's cloud storage"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is 'dumpster diving' as a social engineering tactic?",
+    "options": [
+      "Searching trash for discarded sensitive documents or devices",
+      "Overloading servers with junk data",
+      "Diving into dark web forums",
+      "Filling inboxes with spam emails"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "question": "A caller says your account will be deleted in one hour unless you provide your credentials. This is an example of:",
+    "options": [
+      "Legitimate security warning",
+      "Creating urgency as a social engineering tactic",
+      "Normal customer support",
+      "Password recovery process"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is the best way to defend against social engineering attacks?",
+    "options": [
+      "Install more antivirus software",
+      "Use complex passwords",
+      "Employee awareness training and verification procedures",
+      "Block all incoming calls"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "Which of the following is an example of authority exploitation in social engineering?",
+    "options": [
+      "Sending a virus via email",
+      "Impersonating a CEO or police officer to pressure someone into compliance",
+      "Cracking a password with software",
+      "Breaking into a server room"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What should you do before sharing sensitive company information with someone you do not recognize?",
+    "options": [
+      "Share it quickly to seem helpful",
+      "Verify their identity through official channels",
+      "Ask them to come back later",
+      "Check their social media profile"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is 'vishing' as a social engineering attack?",
+    "options": [
+      "Visual phishing using pop-up ads",
+      "Phishing conducted over voice or phone calls",
+      "Phishing using video calls only",
+      "Hacking via voice commands to smart speakers"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "A person drops a USB drive in a parking lot labeled 'Salary Data.' An employee picks it up and plugs it in. This is an example of:",
+    "options": [
+      "Helpful data recovery",
+      "Baiting attack",
+      "Brute force attack",
+      "Legitimate IT testing"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following is a good personal habit to reduce social engineering risk?",
+    "options": [
+      "Sharing login credentials with close colleagues",
+      "Trusting all official-looking emails",
+      "Questioning unusual requests and verifying identity before acting",
+      "Using the same password across all accounts"
+    ],
+    "correctIndex": 2
+  }
+]

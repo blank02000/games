@@ -1,0 +1,202 @@
+[
+  {
+    "question": "What is phishing?",
+    "options": [
+      "A type of fishing sport",
+      "A fraudulent attempt to steal sensitive info via fake messages",
+      "A network speed test",
+      "A software update process"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following is a common sign of a phishing email?",
+    "options": [
+      "Sent from a verified company domain",
+      "Contains proper grammar and no urgency",
+      "Urgent request with a suspicious link",
+      "Has your full name spelled correctly"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is spear phishing?",
+    "options": [
+      "Mass phishing sent to everyone",
+      "Phishing targeted at a specific individual or organization",
+      "A type of network attack",
+      "Phishing using phone calls only"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is vishing?",
+    "options": [
+      "Phishing via video games",
+      "Phishing via voice or phone calls",
+      "Phishing via SMS messages",
+      "Phishing via fake websites"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is smishing?",
+    "options": [
+      "Phishing via social media posts",
+      "Phishing via email attachments",
+      "Phishing via SMS text messages",
+      "Phishing via gaming apps"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What does ransomware do?",
+    "options": [
+      "Speeds up your computer",
+      "Encrypts your files and demands payment to restore them",
+      "Deletes your antivirus software",
+      "Steals your browser history"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is the safest action if you receive a ransom demand?",
+    "options": [
+      "Pay immediately to recover files",
+      "Ignore it and continue working",
+      "Report to IT/authorities and do NOT pay",
+      "Share the demand on social media"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "How is ransomware most commonly delivered?",
+    "options": [
+      "Through hardware USB drives only",
+      "Via phishing emails with malicious attachments or links",
+      "Through official app stores",
+      "By postal mail"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "What is the best defense against ransomware?",
+    "options": [
+      "Never turn off your computer",
+      "Regular offline backups of important data",
+      "Using only one strong password",
+      "Disabling your firewall"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following could indicate a phishing website?",
+    "options": [
+      "URL starts with https://",
+      "Website has a valid padlock icon",
+      "URL has slight misspelling like 'arnazon.com'",
+      "Website loads quickly"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is 'whaling' in cybersecurity?",
+    "options": [
+      "Phishing targeting marine researchers",
+      "Phishing attacks aimed at senior executives or high-value targets",
+      "A large-scale DDoS attack",
+      "Capturing network packets"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "An email asks you to click a link to 'verify your bank account immediately.' What should you do?",
+    "options": [
+      "Click the link right away",
+      "Forward to all contacts",
+      "Do not click; contact your bank directly via official website",
+      "Reply with your account details"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is a 'double extortion' ransomware attack?",
+    "options": [
+      "Encrypting files twice",
+      "Encrypting files AND threatening to leak stolen data if ransom is not paid",
+      "Demanding two different cryptocurrencies",
+      "Attacking two organizations at once"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following best protects against phishing?",
+    "options": [
+      "Opening all emails quickly",
+      "Using the same password everywhere",
+      "Verifying sender identity and not clicking suspicious links",
+      "Disabling two-factor authentication"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What payment method do ransomware attackers typically demand?",
+    "options": [
+      "Credit card",
+      "Bank wire transfer",
+      "Cryptocurrency like Bitcoin",
+      "Gift cards or cash only"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is 'clone phishing'?",
+    "options": [
+      "Creating duplicate user accounts",
+      "Copying a legitimate email and replacing links with malicious ones",
+      "Phishing using cloned phones",
+      "Hacking social media clones"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "If ransomware infects your computer, what is the FIRST thing you should do?",
+    "options": [
+      "Pay the ransom immediately",
+      "Disconnect from the network to prevent spread",
+      "Restart the computer",
+      "Install new software"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "question": "Which of the following is NOT a phishing red flag?",
+    "options": [
+      "Generic greeting like 'Dear Customer'",
+      "Request for personal information via email",
+      "Email from a verified domain with your name",
+      "Urgent threats about account suspension"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "question": "What is 'angler phishing'?",
+    "options": [
+      "Phishing via fake customer support on social media",
+      "Phishing by hacking routers",
+      "Phishing via gaming platforms",
+      "Phishing via email newsletters"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "question": "Why should you hover over links before clicking them in emails?",
+    "options": [
+      "To make the link load faster",
+      "To see the actual destination URL and check if it's legitimate",
+      "To download the file automatically",
+      "To bookmark the link"
+    ],
+    "correctIndex": 1
+  }
+]
