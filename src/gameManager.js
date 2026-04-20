@@ -131,27 +131,29 @@ export class GameManager {
 
   _startTimer(levelCfg) {
     this._elapsedSeconds = 0;
-    const target = levelCfg.targetTime || 30;
+    const target       = levelCfg.targetTime  || 30;
     const penaltyEvery = levelCfg.penaltyEvery || 10;
     const penaltyAmount = levelCfg.penaltyAmount || 5;
     this._nextPenaltyAt = target + penaltyEvery;
 
-    // Show initial time BEFORE the first tick so it's never "0:00" at start
+    // Show 0:00 immediately when level starts (counts UP)
     if (this._ui._infoTimer) {
-      this._ui._infoTimer.textContent = this._ui._formatTime(target);
+      this._ui._infoTimer.textContent = '0:00';
       this._ui._infoTimer.classList.remove('timer-urgent', 'timer-overtime');
     }
 
     this._timerInterval = setInterval(() => {
       this._elapsedSeconds += 1;
-      const remaining = target - this._elapsedSeconds;
-      const overtime  = remaining < 0;
-      const urgent    = !overtime && remaining <= 10;
 
-      // Count down to 0:00, then lock at 0:00 in OT state
-      this._ui.updateTimer(overtime ? 0 : remaining, urgent, overtime);
+      const overtime = this._elapsedSeconds > target;
+      const remaining = target - this._elapsedSeconds;          // negative when OT
+      const urgent = !overtime && remaining <= 10;               // last 10s before limit
 
-      // Fire penalty for every N overtime seconds
+      // Display: count up. Once overtime just hold at target value in red.
+      const displaySeconds = overtime ? target : this._elapsedSeconds;
+      this._ui.updateTimer(displaySeconds, urgent, overtime);
+
+      // Fire penalty every N seconds over the limit
       if (overtime && this._elapsedSeconds >= this._nextPenaltyAt) {
         this._nextPenaltyAt += penaltyEvery;
         this._applyPenalty(penaltyAmount);
