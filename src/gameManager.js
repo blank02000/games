@@ -149,9 +149,8 @@ export class GameManager {
       const remaining = target - this._elapsedSeconds;          // negative when OT
       const urgent = !overtime && remaining <= 10;               // last 10s before limit
 
-      // Display: count up. Once overtime just hold at target value in red.
-      const displaySeconds = overtime ? target : this._elapsedSeconds;
-      this._ui.updateTimer(displaySeconds, urgent, overtime);
+      // Always count up — no freeze in overtime
+      this._ui.updateTimer(this._elapsedSeconds, urgent, overtime);
 
       // Fire penalty every N seconds over the limit
       if (overtime && this._elapsedSeconds >= this._nextPenaltyAt) {

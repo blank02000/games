@@ -49,11 +49,15 @@ export class UIController {
     // Auto-scroll to top when reward video ends
     if (this._rewardVideo) {
       this._rewardVideo.addEventListener('ended', () => {
+        // Try every scrollable ancestor until one works
+        const wrap = document.querySelector('.complete-wrap');
+        if (wrap) wrap.scrollTo({ top: 0, behavior: 'smooth' });
         const completeScreen = document.getElementById('screen-complete');
-        if (completeScreen) {
-          completeScreen.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (completeScreen) completeScreen.scrollTo({ top: 0, behavior: 'smooth' });
+        const app = document.getElementById('app');
+        if (app) app.scrollTo({ top: 0, behavior: 'smooth' });
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+        try { document.documentElement.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
       });
     }
 

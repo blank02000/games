@@ -141,11 +141,15 @@ class UIController {
     // Auto-scroll to top when reward video ends
     if (this._rewardVideo) {
       this._rewardVideo.addEventListener('ended', () => {
+        // Try every scrollable ancestor until one works
+        const wrap = document.querySelector('.complete-wrap');
+        if (wrap) wrap.scrollTo({ top: 0, behavior: 'smooth' });
         const completeScreen = document.getElementById('screen-complete');
-        if (completeScreen) {
-          completeScreen.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (completeScreen) completeScreen.scrollTo({ top: 0, behavior: 'smooth' });
+        const app = document.getElementById('app');
+        if (app) app.scrollTo({ top: 0, behavior: 'smooth' });
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+        try { document.documentElement.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
       });
     }
 
@@ -1496,9 +1500,8 @@ class GameManager {
       const remaining = target - this._elapsedSeconds;          // negative when OT
       const urgent = !overtime && remaining <= 10;               // last 10s before limit
 
-      // Display: count up. Once overtime just hold at target value in red.
-      const displaySeconds = overtime ? target : this._elapsedSeconds;
-      this._ui.updateTimer(displaySeconds, urgent, overtime);
+      // Always count up — no freeze in overtime
+      this._ui.updateTimer(this._elapsedSeconds, urgent, overtime);
 
       // Fire penalty every N seconds over the limit
       if (overtime && this._elapsedSeconds >= this._nextPenaltyAt) {

@@ -780,8 +780,10 @@ body.is-dragging * { cursor: grabbing !important; }
   border: 1px solid var(--border-solid);
   border-radius: 14px;
   padding: 2rem;
-  max-width: 400px;
+  max-width: 420px;
   width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
   box-shadow: var(--shadow);
   animation: modalIn 0.25s ease;
   z-index: 1;
