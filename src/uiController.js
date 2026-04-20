@@ -1,7 +1,7 @@
 /**
  * uiController.js
  * Handles DOM interactions: screen transitions, HUD updates,
- * tutorial modal state, and completion carousel navigation.
+ * timer/score display, penalty animations, tutorial modal, and carousel navigation.
  * SOC Security Training: Security Control System
  */
 
@@ -21,35 +21,48 @@ export class UIController {
     this._levelTopic = document.getElementById('level-topic');
     this._statusText = document.getElementById('status-text');
 
-    this._infoLevel = document.getElementById('info-level');
+    this._infoLevel  = document.getElementById('info-level');
     this._infoPieces = document.getElementById('info-pieces');
     this._infoThreat = document.getElementById('info-threat');
+    this._infoTimer  = document.getElementById('info-timer');
+    this._infoScore  = document.getElementById('info-score');
+    this._penaltyAnchor = document.getElementById('penalty-anchor');
 
-
-    this._objectiveCopy = document.getElementById('objective-copy');
+    this._objectiveCopy   = document.getElementById('objective-copy');
     this._interactionHint = document.getElementById('interaction-hint');
-    this._stageTopic = document.getElementById('stage-topic');
+    this._stageTopic      = document.getElementById('stage-topic');
 
-    this._tipText = document.getElementById('tip-text');
-    this._revealImg = document.getElementById('reveal-image');
+    this._tipText    = document.getElementById('tip-text');
+    this._revealImg  = document.getElementById('reveal-image');
     this._rewardVideo = document.getElementById('reward-video');
 
-    this.btnStart = document.getElementById('btn-start');
-    this.btnNext = document.getElementById('btn-next');
-    this.btnRestart = document.getElementById('btn-restart');
-    this.btnCloseGame = document.getElementById('btn-close-game');
-    this.btnHowToPlay = document.getElementById('btn-how-to-play');
+    this.btnStart      = document.getElementById('btn-start');
+    this.btnNext       = document.getElementById('btn-next');
+    this.btnRestart    = document.getElementById('btn-restart');
+    this.btnCloseGame  = document.getElementById('btn-close-game');
+    this.btnHowToPlay  = document.getElementById('btn-how-to-play');
 
     if (this.btnCloseGame) {
       this.btnCloseGame.addEventListener('click', () => window.close());
     }
 
-    this._carouselSlides = document.querySelectorAll('.carousel-slide');
-    this._carouselDots = document.querySelectorAll('.carousel-dot');
-    this._currentSlide = 0;
-    this._totalSlides = this._carouselSlides.length;
+    // Auto-scroll to top when reward video ends
+    if (this._rewardVideo) {
+      this._rewardVideo.addEventListener('ended', () => {
+        const completeScreen = document.getElementById('screen-complete');
+        if (completeScreen) {
+          completeScreen.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
 
-    this._tutorialModal = document.getElementById('tutorial-modal');
+    this._carouselSlides = document.querySelectorAll('.carousel-slide');
+    this._carouselDots   = document.querySelectorAll('.carousel-dot');
+    this._currentSlide   = 0;
+    this._totalSlides    = this._carouselSlides.length;
+
+    this._tutorialModal   = document.getElementById('tutorial-modal');
     this._tutorialOverlay = this._tutorialModal?.querySelector('.tutorial-modal-overlay');
     this._btnTutorialClose = document.getElementById('btn-close-tutorial');
 
@@ -63,15 +76,17 @@ export class UIController {
       this._tutorialOverlay.addEventListener('click', () => this.hideTutorial());
     }
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        this.hideTutorial();
-      }
+      if (event.key === 'Escape') this.hideTutorial();
     });
 
     this._carouselDots.forEach((dot, index) => {
       dot.addEventListener('click', () => this.showCarouselSlide(index));
     });
+
+    this._isFinalLevel = false;
   }
+
+  // ─── Screen management ────────────────────────────────────────────────────
 
   showScreen(id) {
     const next = this._screens[id];
@@ -88,6 +103,8 @@ export class UIController {
     });
   }
 
+  // ─── Tutorial ─────────────────────────────────────────────────────────────
+
   showTutorial() {
     if (!this._tutorialModal) return;
     this._tutorialModal.classList.add('modal--active');
@@ -100,9 +117,8 @@ export class UIController {
     this._tutorialModal.setAttribute('aria-hidden', 'true');
   }
 
-  /**
-   * Release module-scoped heavy media when leaving the completion flow or reloading a level.
-   */
+  // ─── Media cleanup ────────────────────────────────────────────────────────
+
   releaseModuleMedia() {
     if (this._rewardVideo) {
       this._rewardVideo.pause();
@@ -118,6 +134,8 @@ export class UIController {
     }
   }
 
+  // ─── HUD setters ──────────────────────────────────────────────────────────
+
   setLevel(levelCfg, totalPieces) {
     this._levelBadge.hidden = false;
     this._levelLabel.textContent = levelCfg.label;
@@ -125,16 +143,66 @@ export class UIController {
     this._stageTopic.textContent = levelCfg.topic;
     this._statusText.textContent = 'RECOVERY ACTIVE';
 
-    this._infoLevel.textContent = levelCfg.label;
+    this._infoLevel.textContent  = levelCfg.label;
     this._infoPieces.textContent = totalPieces;
     this._infoThreat.textContent = levelCfg.threat;
-    this._objectiveCopy.textContent = levelCfg.objective;
+
+    if (this._infoTimer) {
+      this._infoTimer.textContent = this._formatTime(levelCfg.targetTime || 30);
+      this._infoTimer.classList.remove('timer-urgent', 'timer-overtime');
+    }
+    if (this._infoScore) {
+      this._infoScore.textContent = (levelCfg.points || 0) + ' pts';
+    }
+
+    this._objectiveCopy.textContent   = levelCfg.objective;
     this._interactionHint.textContent = this._getInteractionHint(levelCfg.hint);
   }
 
+  /**
+   * Update timer display.
+   * @param {number} remainingSeconds - seconds left (0 when overtime)
+   * @param {boolean} urgent - last 10 seconds
+   * @param {boolean} overtime - past target time
+   */
+  updateTimer(remainingSeconds, urgent, overtime) {
+    if (!this._infoTimer) return;
+    this._infoTimer.textContent = this._formatTime(remainingSeconds);
+    this._infoTimer.classList.toggle('timer-urgent', urgent);
+    this._infoTimer.classList.toggle('timer-overtime', overtime);
+  }
 
+  /**
+   * Update live score display.
+   * @param {number} score
+   */
+  updateScore(score) {
+    if (this._infoScore) {
+      this._infoScore.textContent = score + ' pts';
+    }
+  }
 
-  showComplete(levelCfg) {
+  /**
+   * Show a floating -N penalty animation near the score.
+   * @param {number} amount
+   */
+  showPenalty(amount) {
+    if (!this._penaltyAnchor) return;
+
+    const el = document.createElement('span');
+    el.className = 'penalty-float';
+    el.textContent = `-${amount}`;
+    this._penaltyAnchor.appendChild(el);
+
+    // Remove after animation completes (~1.2s)
+    el.addEventListener('animationend', () => el.remove());
+  }
+
+  // ─── Completion screens ───────────────────────────────────────────────────
+
+  showComplete(levelCfg, isFinalLevel = false) {
+    this._isFinalLevel = isFinalLevel;
+
     this._revealImg.src = levelCfg.image;
     this._revealImg.alt = `Restored sector: ${levelCfg.topic}`;
     this._tipText.textContent = levelCfg.tip.trim();
@@ -187,7 +255,11 @@ export class UIController {
     this._showSlide(index);
 
     if (index === this._totalSlides - 1) {
-      this.btnNext.textContent = 'Proceed to Next Module';
+      // Last slide: show appropriate CTA
+      this.btnNext.textContent = this._isFinalLevel
+        ? '🏆 Complete Mission'
+        : 'Proceed to Next Module';
+
       setTimeout(() => {
         this._rewardVideo.play().catch(() => {});
       }, 300);
@@ -204,7 +276,7 @@ export class UIController {
 
     const scoreDisplay = document.getElementById('final-score-display');
     if (scoreDisplay) {
-      scoreDisplay.textContent = `${score}%`;
+      scoreDisplay.textContent = `${score} pts`;
     }
 
     this.showScreen('final');
@@ -214,9 +286,16 @@ export class UIController {
     this._levelBadge.hidden = true;
     this._statusText.textContent = 'STANDBY';
     this._stageTopic.textContent = 'Awaiting recovery';
-    this._objectiveCopy.textContent = 'Align every fragment with its matching board position to restore the active module.';
+    this._objectiveCopy.textContent   = 'Align every fragment with its matching board position to restore the active module.';
     this._interactionHint.textContent = 'Drag pieces from the tray and release them near the matching slot.';
+    if (this._infoTimer) {
+      this._infoTimer.textContent = '–';
+      this._infoTimer.classList.remove('timer-urgent', 'timer-overtime');
+    }
+    if (this._infoScore) this._infoScore.textContent = '–';
   }
+
+  // ─── Internal helpers ─────────────────────────────────────────────────────
 
   _showSlide(index) {
     this._carouselSlides.forEach((slide, slideIndex) => {
@@ -234,7 +313,13 @@ export class UIController {
     const controlText = coarsePointer
       ? 'Touch and drag each fragment from the tray, then release it near the matching slot.'
       : 'Drag each fragment from the tray and release it near the matching slot.';
-
     return `${controlText} ${levelHint}`;
+  }
+
+  _formatTime(seconds) {
+    const s = Math.max(0, Math.floor(seconds));
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${m}:${String(rem).padStart(2, '0')}`;
   }
 }

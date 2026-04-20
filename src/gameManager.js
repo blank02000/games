@@ -1,6 +1,6 @@
 /**
  * gameManager.js
- * Orchestrates level loading, progression, and win-state flow.
+ * Orchestrates level loading, progression, win-state flow, and timer/scoring.
  * SOC Security Training: Security Control System
  */
 
@@ -24,6 +24,16 @@ export class GameManager {
     this._pieceCtrl = null;
     this._puzzleMgr = null;
     this._levelComplete = false;
+
+    // Scoring
+    this._currentScore = 0;  // cumulative across levels
+
+    // Timer state (per level)
+    this._timerInterval = null;
+    this._elapsedSeconds = 0;
+    this._levelCfg = null;
+    this._levelPoints = 0;    // live points for current level (can be reduced by penalty)
+    this._nextPenaltyAt = 0;  // elapsed seconds at which next penalty fires
   }
 
   async init() {
@@ -60,12 +70,16 @@ export class GameManager {
       this._ui.releaseModuleMedia();
       this._assets.evictImageCacheExcept(null);
       this._ui.showFinal(this._currentScore);
+      // Dispatch final score event for SCORM
+      document.dispatchEvent(new CustomEvent('game:allComplete', { detail: { score: this._currentScore } }));
     }
   }
 
   _restart() {
     this._levelIndex = 0;
     this._levelComplete = false;
+    this._currentScore = 0;
+    this._stopTimer();
     this._ui.resetHeader();
 
     if (this._pieceCtrl) {
@@ -79,7 +93,10 @@ export class GameManager {
 
   _loadLevel(index) {
     const levelCfg = LEVELS[index];
+    this._levelCfg = levelCfg;
     this._levelComplete = false;
+
+    this._stopTimer();
 
     if (this._pieceCtrl) {
       this._pieceCtrl.destroy();
@@ -102,8 +119,56 @@ export class GameManager {
     this._puzzleMgr.build(levelCfg);
     this._ui.setLevel(levelCfg, this._puzzleMgr.total);
 
+    // Init live level points (can be reduced by penalties)
+    this._levelPoints = levelCfg.points || 0;
+    this._ui.updateScore(this._currentScore + this._levelPoints);
+
     this._ui.showScreen('game');
+    this._startTimer(levelCfg);
   }
+
+  // ─── Timer ─────────────────────────────────────────────────────────────────
+
+  _startTimer(levelCfg) {
+    this._elapsedSeconds = 0;
+    const target = levelCfg.targetTime || 30;
+    this._nextPenaltyAt = target + (levelCfg.penaltyEvery || 10);
+
+    // Immediately render 0:00
+    this._ui.updateTimer(target, false, false);
+
+    this._timerInterval = setInterval(() => {
+      this._elapsedSeconds += 1;
+      const remaining = target - this._elapsedSeconds;
+      const overtime = remaining < 0;
+      const urgent = remaining <= 10 && remaining > 0;
+
+      // Display: count down to 00:00, then hold at 00:00 (overtime handled by score)
+      const displaySeconds = overtime ? 0 : remaining;
+      this._ui.updateTimer(displaySeconds, urgent, overtime);
+
+      // Overtime penalty
+      if (overtime && this._elapsedSeconds >= this._nextPenaltyAt) {
+        this._nextPenaltyAt += (levelCfg.penaltyEvery || 10);
+        this._applyPenalty(levelCfg.penaltyAmount || 5);
+      }
+    }, 1000);
+  }
+
+  _stopTimer() {
+    if (this._timerInterval) {
+      clearInterval(this._timerInterval);
+      this._timerInterval = null;
+    }
+  }
+
+  _applyPenalty(amount) {
+    this._levelPoints = Math.max(0, this._levelPoints - amount);
+    this._ui.updateScore(this._currentScore + this._levelPoints);
+    this._ui.showPenalty(amount);
+  }
+
+  // ─── Snap / Complete ───────────────────────────────────────────────────────
 
   _handleSnap() {
     if (this._levelComplete) return;
@@ -112,7 +177,6 @@ export class GameManager {
     this._assets.play('snap');
     this._puzzleMgr.registerSnap();
 
-    // Haptic feedback on supported devices
     if (navigator.vibrate) {
       navigator.vibrate(30);
     }
@@ -120,15 +184,29 @@ export class GameManager {
 
   _handleLevelComplete(levelCfg) {
     if (this._levelComplete) return;
-
     this._levelComplete = true;
-    this._currentScore += (levelCfg.points || 0);
-    console.log(`Score Submitted: ${this._currentScore} / 100 points`);
-    
+
+    this._stopTimer();
+
+    // Bank the (possibly reduced) level points
+    this._currentScore += this._levelPoints;
+    console.log(`Level ${levelCfg.id} complete. +${this._levelPoints} pts → Total: ${this._currentScore} / 100`);
+
+    // Dispatch for SCORM mid-level save
+    document.dispatchEvent(new CustomEvent('game:levelComplete', {
+      detail: {
+        levelLabel: levelCfg.label,
+        levelPoints: this._levelPoints,
+        runningScore: this._currentScore,
+      },
+    }));
+
     this._assets.play('success');
 
+    const isFinalLevel = levelCfg.id === LEVELS[LEVELS.length - 1].id;
+
     setTimeout(() => {
-      this._ui.showComplete(levelCfg);
+      this._ui.showComplete(levelCfg, isFinalLevel);
     }, 600);
   }
 }

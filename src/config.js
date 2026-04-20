@@ -4,8 +4,8 @@
  * SOC Security Training: Security Control System
  */
 
-export const SNAP_THRESHOLD = 40;
-export const SNAP_THRESHOLD_TOUCH = 65;
+export const SNAP_THRESHOLD = 80;        // desktop px
+export const SNAP_THRESHOLD_TOUCH = 120; // touch px (much more forgiving)
 
 export const LEVELS = [
   {
@@ -13,7 +13,10 @@ export const LEVELS = [
     label: 'Module 1',
     topic: 'Unauthorized Access',
     threat: 'ELEVATED',
-    points: 20,
+    points: 20,           // base points earned on completion
+    targetTime: 30,       // seconds before overtime kicks in
+    penaltyEvery: 10,     // deduct every N overtime seconds
+    penaltyAmount: 5,     // points deducted per interval
     grid: { cols: 3, rows: 2 },
     image: 'assets/images/Phisical security/level1.png',
     video: 'assets/videos/level1.mp4',
@@ -34,6 +37,9 @@ If a system denies access, it means authentication has failed - do not try to by
     topic: 'Physical Security (Tailgating)',
     threat: 'HIGH',
     points: 30,
+    targetTime: 60,
+    penaltyEvery: 10,
+    penaltyAmount: 5,
     grid: { cols: 4, rows: 3 },
     image: 'assets/images/Phisical security/level2.png',
     video: 'assets/videos/level2.mp4',
@@ -56,6 +62,9 @@ Physical security is cybersecurity's first layer.
     topic: 'Zero Trust & MFA',
     threat: 'CRITICAL',
     points: 50,
+    targetTime: 90,
+    penaltyEvery: 10,
+    penaltyAmount: 5,
     grid: { cols: 5, rows: 4 },
     image: 'assets/images/Phisical security/level3.png',
     video: 'assets/videos/level3.mp4',

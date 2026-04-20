@@ -6,8 +6,8 @@
  * SOC Security Training: Security Control System
  */
 
-const SNAP_THRESHOLD = 40;
-const SNAP_THRESHOLD_TOUCH = 65;
+const SNAP_THRESHOLD = 80;        // desktop px
+const SNAP_THRESHOLD_TOUCH = 120; // touch px (much more forgiving)
 
 const LEVELS = [
   {
@@ -15,7 +15,10 @@ const LEVELS = [
     label: 'Module 1',
     topic: 'Unauthorized Access',
     threat: 'ELEVATED',
-    points: 20,
+    points: 20,           // base points earned on completion
+    targetTime: 30,       // seconds before overtime kicks in
+    penaltyEvery: 10,     // deduct every N overtime seconds
+    penaltyAmount: 5,     // points deducted per interval
     grid: { cols: 3, rows: 2 },
     image: 'assets/images/Phisical security/level1.png',
     video: 'assets/videos/level1.mp4',
@@ -36,6 +39,9 @@ If a system denies access, it means authentication has failed - do not try to by
     topic: 'Physical Security (Tailgating)',
     threat: 'HIGH',
     points: 30,
+    targetTime: 60,
+    penaltyEvery: 10,
+    penaltyAmount: 5,
     grid: { cols: 4, rows: 3 },
     image: 'assets/images/Phisical security/level2.png',
     video: 'assets/videos/level2.mp4',
@@ -58,6 +64,9 @@ Physical security is cybersecurity's first layer.
     topic: 'Zero Trust & MFA',
     threat: 'CRITICAL',
     points: 50,
+    targetTime: 90,
+    penaltyEvery: 10,
+    penaltyAmount: 5,
     grid: { cols: 5, rows: 4 },
     image: 'assets/images/Phisical security/level3.png',
     video: 'assets/videos/level3.mp4',
@@ -85,7 +94,7 @@ function levelAssetsAreCanonical(levelCfg) {
 /**
  * uiController.js
  * Handles DOM interactions: screen transitions, HUD updates,
- * tutorial modal state, and completion carousel navigation.
+ * timer/score display, penalty animations, tutorial modal, and carousel navigation.
  * SOC Security Training: Security Control System
  */
 
@@ -104,35 +113,48 @@ class UIController {
     this._levelTopic = document.getElementById('level-topic');
     this._statusText = document.getElementById('status-text');
 
-    this._infoLevel = document.getElementById('info-level');
+    this._infoLevel  = document.getElementById('info-level');
     this._infoPieces = document.getElementById('info-pieces');
     this._infoThreat = document.getElementById('info-threat');
+    this._infoTimer  = document.getElementById('info-timer');
+    this._infoScore  = document.getElementById('info-score');
+    this._penaltyAnchor = document.getElementById('penalty-anchor');
 
-
-    this._objectiveCopy = document.getElementById('objective-copy');
+    this._objectiveCopy   = document.getElementById('objective-copy');
     this._interactionHint = document.getElementById('interaction-hint');
-    this._stageTopic = document.getElementById('stage-topic');
+    this._stageTopic      = document.getElementById('stage-topic');
 
-    this._tipText = document.getElementById('tip-text');
-    this._revealImg = document.getElementById('reveal-image');
+    this._tipText    = document.getElementById('tip-text');
+    this._revealImg  = document.getElementById('reveal-image');
     this._rewardVideo = document.getElementById('reward-video');
 
-    this.btnStart = document.getElementById('btn-start');
-    this.btnNext = document.getElementById('btn-next');
-    this.btnRestart = document.getElementById('btn-restart');
-    this.btnCloseGame = document.getElementById('btn-close-game');
-    this.btnHowToPlay = document.getElementById('btn-how-to-play');
+    this.btnStart      = document.getElementById('btn-start');
+    this.btnNext       = document.getElementById('btn-next');
+    this.btnRestart    = document.getElementById('btn-restart');
+    this.btnCloseGame  = document.getElementById('btn-close-game');
+    this.btnHowToPlay  = document.getElementById('btn-how-to-play');
 
     if (this.btnCloseGame) {
       this.btnCloseGame.addEventListener('click', () => window.close());
     }
 
-    this._carouselSlides = document.querySelectorAll('.carousel-slide');
-    this._carouselDots = document.querySelectorAll('.carousel-dot');
-    this._currentSlide = 0;
-    this._totalSlides = this._carouselSlides.length;
+    // Auto-scroll to top when reward video ends
+    if (this._rewardVideo) {
+      this._rewardVideo.addEventListener('ended', () => {
+        const completeScreen = document.getElementById('screen-complete');
+        if (completeScreen) {
+          completeScreen.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
 
-    this._tutorialModal = document.getElementById('tutorial-modal');
+    this._carouselSlides = document.querySelectorAll('.carousel-slide');
+    this._carouselDots   = document.querySelectorAll('.carousel-dot');
+    this._currentSlide   = 0;
+    this._totalSlides    = this._carouselSlides.length;
+
+    this._tutorialModal   = document.getElementById('tutorial-modal');
     this._tutorialOverlay = this._tutorialModal?.querySelector('.tutorial-modal-overlay');
     this._btnTutorialClose = document.getElementById('btn-close-tutorial');
 
@@ -146,15 +168,17 @@ class UIController {
       this._tutorialOverlay.addEventListener('click', () => this.hideTutorial());
     }
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        this.hideTutorial();
-      }
+      if (event.key === 'Escape') this.hideTutorial();
     });
 
     this._carouselDots.forEach((dot, index) => {
       dot.addEventListener('click', () => this.showCarouselSlide(index));
     });
+
+    this._isFinalLevel = false;
   }
+
+  // ─── Screen management ────────────────────────────────────────────────────
 
   showScreen(id) {
     const next = this._screens[id];
@@ -171,6 +195,8 @@ class UIController {
     });
   }
 
+  // ─── Tutorial ─────────────────────────────────────────────────────────────
+
   showTutorial() {
     if (!this._tutorialModal) return;
     this._tutorialModal.classList.add('modal--active');
@@ -183,9 +209,8 @@ class UIController {
     this._tutorialModal.setAttribute('aria-hidden', 'true');
   }
 
-  /**
-   * Release module-scoped heavy media when leaving the completion flow or reloading a level.
-   */
+  // ─── Media cleanup ────────────────────────────────────────────────────────
+
   releaseModuleMedia() {
     if (this._rewardVideo) {
       this._rewardVideo.pause();
@@ -201,6 +226,8 @@ class UIController {
     }
   }
 
+  // ─── HUD setters ──────────────────────────────────────────────────────────
+
   setLevel(levelCfg, totalPieces) {
     this._levelBadge.hidden = false;
     this._levelLabel.textContent = levelCfg.label;
@@ -208,16 +235,66 @@ class UIController {
     this._stageTopic.textContent = levelCfg.topic;
     this._statusText.textContent = 'RECOVERY ACTIVE';
 
-    this._infoLevel.textContent = levelCfg.label;
+    this._infoLevel.textContent  = levelCfg.label;
     this._infoPieces.textContent = totalPieces;
     this._infoThreat.textContent = levelCfg.threat;
-    this._objectiveCopy.textContent = levelCfg.objective;
+
+    if (this._infoTimer) {
+      this._infoTimer.textContent = this._formatTime(levelCfg.targetTime || 30);
+      this._infoTimer.classList.remove('timer-urgent', 'timer-overtime');
+    }
+    if (this._infoScore) {
+      this._infoScore.textContent = (levelCfg.points || 0) + ' pts';
+    }
+
+    this._objectiveCopy.textContent   = levelCfg.objective;
     this._interactionHint.textContent = this._getInteractionHint(levelCfg.hint);
   }
 
+  /**
+   * Update timer display.
+   * @param {number} remainingSeconds - seconds left (0 when overtime)
+   * @param {boolean} urgent - last 10 seconds
+   * @param {boolean} overtime - past target time
+   */
+  updateTimer(remainingSeconds, urgent, overtime) {
+    if (!this._infoTimer) return;
+    this._infoTimer.textContent = this._formatTime(remainingSeconds);
+    this._infoTimer.classList.toggle('timer-urgent', urgent);
+    this._infoTimer.classList.toggle('timer-overtime', overtime);
+  }
 
+  /**
+   * Update live score display.
+   * @param {number} score
+   */
+  updateScore(score) {
+    if (this._infoScore) {
+      this._infoScore.textContent = score + ' pts';
+    }
+  }
 
-  showComplete(levelCfg) {
+  /**
+   * Show a floating -N penalty animation near the score.
+   * @param {number} amount
+   */
+  showPenalty(amount) {
+    if (!this._penaltyAnchor) return;
+
+    const el = document.createElement('span');
+    el.className = 'penalty-float';
+    el.textContent = `-${amount}`;
+    this._penaltyAnchor.appendChild(el);
+
+    // Remove after animation completes (~1.2s)
+    el.addEventListener('animationend', () => el.remove());
+  }
+
+  // ─── Completion screens ───────────────────────────────────────────────────
+
+  showComplete(levelCfg, isFinalLevel = false) {
+    this._isFinalLevel = isFinalLevel;
+
     this._revealImg.src = levelCfg.image;
     this._revealImg.alt = `Restored sector: ${levelCfg.topic}`;
     this._tipText.textContent = levelCfg.tip.trim();
@@ -270,7 +347,11 @@ class UIController {
     this._showSlide(index);
 
     if (index === this._totalSlides - 1) {
-      this.btnNext.textContent = 'Proceed to Next Module';
+      // Last slide: show appropriate CTA
+      this.btnNext.textContent = this._isFinalLevel
+        ? '🏆 Complete Mission'
+        : 'Proceed to Next Module';
+
       setTimeout(() => {
         this._rewardVideo.play().catch(() => {});
       }, 300);
@@ -287,7 +368,7 @@ class UIController {
 
     const scoreDisplay = document.getElementById('final-score-display');
     if (scoreDisplay) {
-      scoreDisplay.textContent = `${score}%`;
+      scoreDisplay.textContent = `${score} pts`;
     }
 
     this.showScreen('final');
@@ -297,9 +378,16 @@ class UIController {
     this._levelBadge.hidden = true;
     this._statusText.textContent = 'STANDBY';
     this._stageTopic.textContent = 'Awaiting recovery';
-    this._objectiveCopy.textContent = 'Align every fragment with its matching board position to restore the active module.';
+    this._objectiveCopy.textContent   = 'Align every fragment with its matching board position to restore the active module.';
     this._interactionHint.textContent = 'Drag pieces from the tray and release them near the matching slot.';
+    if (this._infoTimer) {
+      this._infoTimer.textContent = '–';
+      this._infoTimer.classList.remove('timer-urgent', 'timer-overtime');
+    }
+    if (this._infoScore) this._infoScore.textContent = '–';
   }
+
+  // ─── Internal helpers ─────────────────────────────────────────────────────
 
   _showSlide(index) {
     this._carouselSlides.forEach((slide, slideIndex) => {
@@ -317,8 +405,14 @@ class UIController {
     const controlText = coarsePointer
       ? 'Touch and drag each fragment from the tray, then release it near the matching slot.'
       : 'Drag each fragment from the tray and release it near the matching slot.';
-
     return `${controlText} ${levelHint}`;
+  }
+
+  _formatTime(seconds) {
+    const s = Math.max(0, Math.floor(seconds));
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${m}:${String(rem).padStart(2, '0')}`;
   }
 }
 
@@ -1254,7 +1348,7 @@ class AssetManager {
 // src/gameManager.js
 /**
  * gameManager.js
- * Orchestrates level loading, progression, and win-state flow.
+ * Orchestrates level loading, progression, win-state flow, and timer/scoring.
  * SOC Security Training: Security Control System
  */
 
@@ -1277,6 +1371,16 @@ class GameManager {
     this._pieceCtrl = null;
     this._puzzleMgr = null;
     this._levelComplete = false;
+
+    // Scoring
+    this._currentScore = 0;  // cumulative across levels
+
+    // Timer state (per level)
+    this._timerInterval = null;
+    this._elapsedSeconds = 0;
+    this._levelCfg = null;
+    this._levelPoints = 0;    // live points for current level (can be reduced by penalty)
+    this._nextPenaltyAt = 0;  // elapsed seconds at which next penalty fires
   }
 
   async init() {
@@ -1313,12 +1417,16 @@ class GameManager {
       this._ui.releaseModuleMedia();
       this._assets.evictImageCacheExcept(null);
       this._ui.showFinal(this._currentScore);
+      // Dispatch final score event for SCORM
+      document.dispatchEvent(new CustomEvent('game:allComplete', { detail: { score: this._currentScore } }));
     }
   }
 
   _restart() {
     this._levelIndex = 0;
     this._levelComplete = false;
+    this._currentScore = 0;
+    this._stopTimer();
     this._ui.resetHeader();
 
     if (this._pieceCtrl) {
@@ -1332,7 +1440,10 @@ class GameManager {
 
   _loadLevel(index) {
     const levelCfg = LEVELS[index];
+    this._levelCfg = levelCfg;
     this._levelComplete = false;
+
+    this._stopTimer();
 
     if (this._pieceCtrl) {
       this._pieceCtrl.destroy();
@@ -1355,8 +1466,56 @@ class GameManager {
     this._puzzleMgr.build(levelCfg);
     this._ui.setLevel(levelCfg, this._puzzleMgr.total);
 
+    // Init live level points (can be reduced by penalties)
+    this._levelPoints = levelCfg.points || 0;
+    this._ui.updateScore(this._currentScore + this._levelPoints);
+
     this._ui.showScreen('game');
+    this._startTimer(levelCfg);
   }
+
+  // ─── Timer ─────────────────────────────────────────────────────────────────
+
+  _startTimer(levelCfg) {
+    this._elapsedSeconds = 0;
+    const target = levelCfg.targetTime || 30;
+    this._nextPenaltyAt = target + (levelCfg.penaltyEvery || 10);
+
+    // Immediately render 0:00
+    this._ui.updateTimer(target, false, false);
+
+    this._timerInterval = setInterval(() => {
+      this._elapsedSeconds += 1;
+      const remaining = target - this._elapsedSeconds;
+      const overtime = remaining < 0;
+      const urgent = remaining <= 10 && remaining > 0;
+
+      // Display: count down to 00:00, then hold at 00:00 (overtime handled by score)
+      const displaySeconds = overtime ? 0 : remaining;
+      this._ui.updateTimer(displaySeconds, urgent, overtime);
+
+      // Overtime penalty
+      if (overtime && this._elapsedSeconds >= this._nextPenaltyAt) {
+        this._nextPenaltyAt += (levelCfg.penaltyEvery || 10);
+        this._applyPenalty(levelCfg.penaltyAmount || 5);
+      }
+    }, 1000);
+  }
+
+  _stopTimer() {
+    if (this._timerInterval) {
+      clearInterval(this._timerInterval);
+      this._timerInterval = null;
+    }
+  }
+
+  _applyPenalty(amount) {
+    this._levelPoints = Math.max(0, this._levelPoints - amount);
+    this._ui.updateScore(this._currentScore + this._levelPoints);
+    this._ui.showPenalty(amount);
+  }
+
+  // ─── Snap / Complete ───────────────────────────────────────────────────────
 
   _handleSnap() {
     if (this._levelComplete) return;
@@ -1365,7 +1524,6 @@ class GameManager {
     this._assets.play('snap');
     this._puzzleMgr.registerSnap();
 
-    // Haptic feedback on supported devices
     if (navigator.vibrate) {
       navigator.vibrate(30);
     }
@@ -1373,15 +1531,29 @@ class GameManager {
 
   _handleLevelComplete(levelCfg) {
     if (this._levelComplete) return;
-
     this._levelComplete = true;
-    this._currentScore += (levelCfg.points || 0);
-    console.log(`Score Submitted: ${this._currentScore} / 100 points`);
-    
+
+    this._stopTimer();
+
+    // Bank the (possibly reduced) level points
+    this._currentScore += this._levelPoints;
+    console.log(`Level ${levelCfg.id} complete. +${this._levelPoints} pts → Total: ${this._currentScore} / 100`);
+
+    // Dispatch for SCORM mid-level save
+    document.dispatchEvent(new CustomEvent('game:levelComplete', {
+      detail: {
+        levelLabel: levelCfg.label,
+        levelPoints: this._levelPoints,
+        runningScore: this._currentScore,
+      },
+    }));
+
     this._assets.play('success');
 
+    const isFinalLevel = levelCfg.id === LEVELS[LEVELS.length - 1].id;
+
     setTimeout(() => {
-      this._ui.showComplete(levelCfg);
+      this._ui.showComplete(levelCfg, isFinalLevel);
     }, 600);
   }
 }
