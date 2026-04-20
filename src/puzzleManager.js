@@ -13,16 +13,13 @@ export class PuzzleManager {
     this._total = 0;
     this._snapped = 0;
     this._onComplete = null;
-    this._onProgress = null;
   }
 
   onComplete(fn) {
     this._onComplete = fn;
   }
 
-  onProgress(fn) {
-    this._onProgress = fn;
-  }
+
 
   build(levelCfg) {
     const { cols, rows } = levelCfg.grid;
@@ -86,9 +83,7 @@ export class PuzzleManager {
 
     this._snapped = filled;
 
-    if (this._onProgress) {
-      this._onProgress(this._snapped, this._total);
-    }
+
 
     if (correct >= this._total && this._onComplete) {
       this._onComplete();

@@ -97,21 +97,14 @@
         </div>
       </div>
 
-      <!-- Progress bar -->
-      <div class="progress-row" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Puzzle completion">
-        <div id="progress-fill" class="progress-fill" style="width:0%"></div>
-      </div>
-      <div class="progress-meta">
-        <span id="pieces-remaining" class="pieces-remaining">– remaining</span>
-        <span id="hud-percent" class="hud-percent">0%</span>
-      </div>
+
 
       <!-- Objective / interaction copy -->
       <div class="game-copy">
         <p id="stage-topic" class="stage-topic">–</p>
         <p id="objective-copy" class="objective-copy">Align every fragment with its matching board position.</p>
         <p id="interaction-hint" class="interaction-hint">Drag pieces from the tray and release them near the matching slot.</p>
-        <p id="hud-progress-copy" class="progress-copy">0 of 0 fragments locked</p>
+
       </div>
 
       <!-- Puzzle area -->
@@ -156,19 +149,15 @@
           <div class="carousel-slide" role="tabpanel">
             <div class="slide-icon" aria-hidden="true">📋</div>
             <h2 class="slide-title">Security Insight</h2>
+            <video
+              id="reward-video"
+              class="reward-video"
+              playsinline
+              controls
+              loop
+              aria-label="Incident replay video"
+            ></video>
             <p id="tip-text" class="tip-text"></p>
-            <div class="video-wrap">
-              <video
-                id="reward-video"
-                class="reward-video"
-                playsinline
-                loop
-                aria-label="Incident replay video"
-              ></video>
-              <button id="btn-video-mute" class="video-mute-btn" aria-label="Mute video" title="Mute / Unmute video">
-                🔊
-              </button>
-            </div>
           </div>
 
         </div><!-- /.carousel -->

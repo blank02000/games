@@ -347,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Only count score when placing fresh from tray into correct spot
                 state.piecesPlaced++;
                 state.score += 100;
-                updateProgress();
+
                 slotEl.classList.add('correct-move');
                 showToast("Correct!", "success");
             } else {
@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('score-indicator').textContent  = `Score: ${state.score}`;
         document.getElementById('level-title').textContent      = level.title;
         document.getElementById('level-instruction').textContent = level.instruction;
-        document.getElementById('progress-bar').style.width     = '0%';
+
 
         boardEl.innerHTML = '';
         trayEl.innerHTML  = '';
@@ -526,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update piecesPlaced based on actual board state
         state.piecesPlaced = correctCount;
-        updateProgress();
+
 
         if (correctCount >= total) {
             setTimeout(handleLevelComplete, 600);
@@ -537,11 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('score-indicator').textContent = `Score: ${state.score}`;
     }
 
-    function updateProgress() {
-        const level = levels[state.currentLevelIndex];
-        const total = level.grid.rows * level.grid.cols;
-        document.getElementById('progress-bar').style.width = `${(state.piecesPlaced / total) * 100}%`;
-    }
+
 
     function handleLevelComplete() {
         const level = levels[state.currentLevelIndex];

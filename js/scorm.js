@@ -175,33 +175,4 @@
     scormInit();
   }
 
-  /* ─── Video mute / unmute button ─────────────────────────── */
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const video    = document.getElementById('reward-video');
-    const muteBtn  = document.getElementById('btn-video-mute');
-
-    if (!video || !muteBtn) return;
-
-    function syncMuteIcon() {
-      muteBtn.textContent = video.muted ? '🔇' : '🔊';
-      muteBtn.setAttribute('aria-label', video.muted ? 'Unmute video' : 'Mute video');
-    }
-
-    muteBtn.addEventListener('click', function () {
-      video.muted = !video.muted;
-      // If unmuting while paused, try to play
-      if (!video.muted && video.paused && video.src) {
-        video.play().catch(() => {});
-      }
-      syncMuteIcon();
-    });
-
-    // Keep button in sync when browser changes muted state (e.g., autoplay policy)
-    video.addEventListener('volumechange', syncMuteIcon);
-
-    // Initialise icon state
-    syncMuteIcon();
-  });
-
 })();

@@ -108,10 +108,7 @@ class UIController {
     this._infoPieces = document.getElementById('info-pieces');
     this._infoThreat = document.getElementById('info-threat');
 
-    this._progressFill = document.getElementById('progress-fill');
-    this._piecesRemaining = document.getElementById('pieces-remaining');
-    this._hudPercent = document.getElementById('hud-percent');
-    this._progressCopy = document.getElementById('hud-progress-copy');
+
     this._objectiveCopy = document.getElementById('objective-copy');
     this._interactionHint = document.getElementById('interaction-hint');
     this._stageTopic = document.getElementById('stage-topic');
@@ -218,22 +215,7 @@ class UIController {
     this._interactionHint.textContent = this._getInteractionHint(levelCfg.hint);
   }
 
-  updateProgress(snapped, total) {
-    const pct = total ? Math.round((snapped / total) * 100) : 0;
-    const remaining = Math.max(total - snapped, 0);
 
-    this._progressFill.style.width = `${pct}%`;
-    this._progressFill.setAttribute('aria-valuenow', pct);
-    this._piecesRemaining.textContent = `${remaining} remaining`;
-    this._hudPercent.textContent = `${pct}%`;
-    this._progressCopy.textContent = `${snapped} of ${total} fragments locked`;
-
-    if (snapped === 0) {
-      this._statusText.textContent = 'RECOVERY ACTIVE';
-    } else if (snapped < total) {
-      this._statusText.textContent = `RECOVERY ${pct}%`;
-    }
-  }
 
   showComplete(levelCfg) {
     this._revealImg.src = levelCfg.image;
@@ -302,8 +284,6 @@ class UIController {
     this._levelBadge.hidden = true;
     this._statusText.textContent = 'FULLY OPERATIONAL';
     this._stageTopic.textContent = 'System restored';
-    this._hudPercent.textContent = '100%';
-    this._progressCopy.textContent = 'All fragments secured';
 
     const scoreDisplay = document.getElementById('final-score-display');
     if (scoreDisplay) {
@@ -317,8 +297,6 @@ class UIController {
     this._levelBadge.hidden = true;
     this._statusText.textContent = 'STANDBY';
     this._stageTopic.textContent = 'Awaiting recovery';
-    this._hudPercent.textContent = '0%';
-    this._progressCopy.textContent = '0 of 0 fragments locked';
     this._objectiveCopy.textContent = 'Align every fragment with its matching board position to restore the active module.';
     this._interactionHint.textContent = 'Drag pieces from the tray and release them near the matching slot.';
   }
@@ -360,16 +338,13 @@ class PuzzleManager {
     this._total = 0;
     this._snapped = 0;
     this._onComplete = null;
-    this._onProgress = null;
   }
 
   onComplete(fn) {
     this._onComplete = fn;
   }
 
-  onProgress(fn) {
-    this._onProgress = fn;
-  }
+
 
   build(levelCfg) {
     const { cols, rows } = levelCfg.grid;
@@ -433,9 +408,7 @@ class PuzzleManager {
 
     this._snapped = filled;
 
-    if (this._onProgress) {
-      this._onProgress(this._snapped, this._total);
-    }
+
 
     if (correct >= this._total && this._onComplete) {
       this._onComplete();
@@ -484,7 +457,6 @@ class PuzzleManager {
       piece.style.backgroundImage = 'none';
       piece.style.backgroundColor = `hsl(${hue},55%,38%)`;
       piece.style.boxShadow = `inset 0 0 0 2px hsla(${hue},55%,65%,0.6)`;
-      // Small label so players can still match pieces
       piece.setAttribute('aria-label', `Piece r${row}c${col}`);
     };
     img.src = image;
@@ -523,9 +495,14 @@ class PieceController {
     this._board = board;
     this._tray = tray;
     this._onSnap = onSnap;
-    this._dragging = null;
+    this._dragging = null; // active drag session (ghost exists)
+    this._pending = null; // touch-only: pointer is down, drag intent not yet confirmed
     this._activePointerId = null;
     this._lastHoverSlot = null;
+    this._selected = null;
+
+    this._slotTapHandlers = new Map(); // slotEl -> handler (for touch tap-to-place flow)
+    this._dragIntentThresholdPx = 8;
 
     this._onPointerMove = this._handlePointerMove.bind(this);
     this._onPointerUp = this._handlePointerUp.bind(this);
@@ -533,20 +510,8 @@ class PieceController {
   }
 
   attachTo(pieceEl) {
-    const isTouch = window.matchMedia?.('(pointer: coarse)').matches;
-
-    if (isTouch) {
-      pieceEl.addEventListener('pointerup', (event) => {
-        if (this._dragging) return; // Don't interfere with active drag
-
-        // Select this piece — highlight ALL slots
-        if (this._selected === pieceEl) {
-          this._deselectPiece();
-          return;
-        }
-        this._selectPiece(pieceEl);
-      });
-    }
+    // Prevent the browser from converting touch drags to scroll/zoom gestures.
+    pieceEl.style.touchAction = 'none';
 
     pieceEl.addEventListener('pointerdown', (event) => this._handlePointerDown(event, pieceEl));
   }
@@ -558,13 +523,22 @@ class PieceController {
 
     // Highlight all slots and make them tappable for swap/place
     const slots = this._getAllSlots();
-    slots.forEach(slot => {
+    slots.forEach((slot) => {
       slot.classList.add('slot--tap-target');
-      slot._tapHandler = () => {
+
+      const handler = (event) => {
+        // Touch UX: tap-slot-to-place only when a piece is selected and no drag is active.
+        if (this._dragging) return;
+        if (event.pointerType === 'mouse') return;
+        if (this._selected !== pieceEl) return;
+
+        event.preventDefault();
         this._handleSwapDrop(pieceEl, slot);
         this._deselectPiece();
       };
-      slot.addEventListener('pointerup', slot._tapHandler);
+
+      this._slotTapHandlers.set(slot, handler);
+      slot.addEventListener('pointerup', handler);
     });
   }
 
@@ -573,38 +547,117 @@ class PieceController {
       this._selected.classList.remove('piece--selected');
       this._selected = null;
     }
-    // Clean up tap handlers
-    this._board.querySelectorAll('.slot--tap-target').forEach(slot => {
+
+    // Clean up tap handlers (avoid leaks / ghost handlers across levels)
+    for (const [slot, handler] of this._slotTapHandlers.entries()) {
       slot.classList.remove('slot--tap-target');
-      if (slot._tapHandler) {
-        slot.removeEventListener('pointerup', slot._tapHandler);
-        slot._tapHandler = null;
-      }
-    });
+      slot.removeEventListener('pointerup', handler);
+    }
+    this._slotTapHandlers.clear();
   }
 
   destroy() {
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);
     window.removeEventListener('pointercancel', this._onPointerCancel);
+    this._deselectPiece();
     this._clearDragState();
   }
 
   _handlePointerDown(event, pieceEl) {
-    if (this._dragging) return;
+    if (this._dragging || this._pending) return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     if (event.isPrimary === false) return;
 
     event.preventDefault();
-    this._deselectPiece();
 
+    this._activePointerId = event.pointerId;
+    window.addEventListener('pointermove', this._onPointerMove);
+    window.addEventListener('pointerup', this._onPointerUp);
+    window.addEventListener('pointercancel', this._onPointerCancel);
+
+    const isCoarse = window.matchMedia?.('(pointer: coarse)').matches;
     const rect = pieceEl.getBoundingClientRect();
+
+    if (!isCoarse || event.pointerType === 'mouse') {
+      // Fine pointer devices: drag-only, start immediately.
+      this._deselectPiece();
+      this._startDrag({
+        pieceEl,
+        pointerId: event.pointerId,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        pieceRect: rect,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
+      });
+      this._updateGhostPosition(event.clientX, event.clientY);
+      return;
+    }
+
+    // Coarse pointer devices: wait for drag intent (movement threshold) or treat as tap on pointerup.
+    this._pending = {
+      pieceEl,
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      pieceRect: rect,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+      startedDrag: false,
+    };
+  }
+
+  _handlePointerMove(event) {
+    if (event.pointerId !== this._activePointerId) return;
+
+    if (this._pending && !this._dragging) {
+      const dx = event.clientX - this._pending.startClientX;
+      const dy = event.clientY - this._pending.startClientY;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > this._dragIntentThresholdPx) {
+        // Drag intent confirmed.
+        this._deselectPiece(); // don't keep tap-select state while dragging
+        const { pieceEl, pointerId, startClientX, startClientY, pieceRect, offsetX, offsetY } = this._pending;
+        this._pending = null;
+        this._startDrag({
+          pieceEl,
+          pointerId,
+          startClientX,
+          startClientY,
+          pieceRect,
+          offsetX,
+          offsetY,
+        });
+      } else {
+        return;
+      }
+    }
+
+    if (!this._dragging) return;
+    this._updateGhostPosition(event.clientX, event.clientY);
+  }
+
+  _updateGhostPosition(clientX, clientY) {
+    const { ghost, offsetX, offsetY } = this._dragging;
+    const x = clientX - offsetX;
+    const y = clientY - offsetY;
+    ghost.style.left = `${x}px`;
+    ghost.style.top = `${y}px`;
+
+    const centerX = x + ghost.offsetWidth / 2;
+    const centerY = y + ghost.offsetHeight / 2;
+    this._highlightNearestSlot(centerX, centerY);
+  }
+
+  _startDrag({ pieceEl, pointerId, pieceRect, offsetX, offsetY }) {
     const ghost = pieceEl.cloneNode(true);
     ghost.style.position = 'fixed';
-    ghost.style.left = `${rect.left}px`;
-    ghost.style.top = `${rect.top}px`;
-    ghost.style.width = `${rect.width}px`;
-    ghost.style.height = `${rect.height}px`;
+    ghost.style.left = `${pieceRect.left}px`;
+    ghost.style.top = `${pieceRect.top}px`;
+    ghost.style.width = `${pieceRect.width}px`;
+    ghost.style.height = `${pieceRect.height}px`;
     ghost.style.margin = '0';
     ghost.style.zIndex = '9998';
     ghost.style.pointerEvents = 'none';
@@ -614,37 +667,14 @@ class PieceController {
     this._dragging = {
       el: pieceEl,
       ghost,
-      offsetX: event.clientX - rect.left,
-      offsetY: event.clientY - rect.top,
-      pointerId: event.pointerId,
+      offsetX,
+      offsetY,
+      pointerId,
     };
-    this._activePointerId = event.pointerId;
-
-    if (pieceEl.setPointerCapture) {
-      pieceEl.setPointerCapture(event.pointerId);
-    }
 
     pieceEl.style.opacity = '0.22';
     this._getAllSlots().forEach((slot) => slot.classList.add('slot--highlight'));
     document.body.classList.add('is-dragging');
-
-    window.addEventListener('pointermove', this._onPointerMove);
-    window.addEventListener('pointerup', this._onPointerUp);
-    window.addEventListener('pointercancel', this._onPointerCancel);
-  }
-
-  _handlePointerMove(event) {
-    if (!this._dragging || event.pointerId !== this._activePointerId) return;
-
-    const { ghost, offsetX, offsetY, el } = this._dragging;
-    const x = event.clientX - offsetX;
-    const y = event.clientY - offsetY;
-    ghost.style.left = `${x}px`;
-    ghost.style.top = `${y}px`;
-
-    const centerX = x + ghost.offsetWidth / 2;
-    const centerY = y + ghost.offsetHeight / 2;
-    this._highlightNearestSlot(centerX, centerY);
   }
 
   _highlightNearestSlot(x, y) {
@@ -685,26 +715,45 @@ class PieceController {
   }
 
   _handlePointerUp(event) {
-    if (!this._dragging || event.pointerId !== this._activePointerId) return;
+    if (event.pointerId !== this._activePointerId) return;
+
+    // Touch tap (no drag intent reached)
+    if (this._pending && !this._dragging) {
+      const { pieceEl } = this._pending;
+      this._pending = null;
+      this._activePointerId = null;
+      window.removeEventListener('pointermove', this._onPointerMove);
+      window.removeEventListener('pointerup', this._onPointerUp);
+      window.removeEventListener('pointercancel', this._onPointerCancel);
+
+      // Coarse pointer primary UX: tap-to-select → tap-slot-to-place.
+      if (this._selected === pieceEl) {
+        this._deselectPiece();
+      } else {
+        this._selectPiece(pieceEl);
+      }
+      return;
+    }
+
+    if (!this._dragging) return;
 
     const { el, ghost, offsetX, offsetY } = this._dragging;
     const dropX = event.clientX - offsetX + (ghost.offsetWidth / 2);
     const dropY = event.clientY - offsetY + (ghost.offsetHeight / 2);
     const target = this._findNearestSlot(dropX, dropY);
 
+    // Clear drag visuals/listeners first (also removes ghost).
     this._clearDragState();
-    this._getAllSlots().forEach(s => s.classList.remove('slot--hover-near'));
+    this._getAllSlots().forEach((s) => s.classList.remove('slot--hover-near'));
 
     if (target) {
       this._handleSwapDrop(el, target);
-    } else {
-      const nearestWrong = this._findNearestSlot(dropX, dropY); // any slot
-      if (nearestWrong) {
-        nearestWrong.classList.add('slot--wrong');
-        setTimeout(() => nearestWrong.classList.remove('slot--wrong'), 600);
-      }
-      this._returnToOrigin(el);
+      return;
     }
+
+    // Missed drop: always return to tray visibly (prevents "lost" pieces).
+    this._returnToTray(el);
+    this._returnToOrigin(el);
   }
 
   _handleSwapDrop(pieceEl, targetSlot) {
@@ -751,12 +800,19 @@ class PieceController {
     });
   }
 
-  _handlePointerCancel() {
+  _handlePointerCancel(event) {
+    if (event?.pointerId != null && event.pointerId !== this._activePointerId) return;
+
+    // If the OS cancels the gesture, never lose the piece: return it to tray.
+    if (this._dragging?.el) {
+      this._returnToTray(this._dragging.el);
+    }
+    this._pending = null;
     this._clearDragState();
   }
 
   _clearDragState() {
-    if (!this._dragging) {
+    if (!this._dragging && !this._pending) {
       return;
     }
 
@@ -769,15 +825,17 @@ class PieceController {
       slot.classList.remove('slot--hover-near');
     });
 
-    if (this._dragging.ghost?.isConnected) {
-      this._dragging.ghost.remove();
-    }
-
-    if (this._dragging.el) {
-      this._dragging.el.style.opacity = '1';
+    if (this._dragging) {
+      if (this._dragging.ghost?.isConnected) {
+        this._dragging.ghost.remove();
+      }
+      if (this._dragging.el) {
+        this._dragging.el.style.opacity = '1';
+      }
     }
 
     this._dragging = null;
+    this._pending = null;
     this._activePointerId = null;
     this._lastHoverSlot = null;
     document.body.classList.remove('is-dragging');
@@ -793,13 +851,15 @@ class PieceController {
     let bestDistance = Infinity;
     
     const isTouch = window.matchMedia?.('(pointer: coarse)').matches;
-    const threshold = isTouch ? SNAP_THRESHOLD_TOUCH : SNAP_THRESHOLD;
-
     for (const slot of slots) {
       const rect = slot.getBoundingClientRect();
       const slotCenterX = rect.left + (rect.width / 2);
       const slotCenterY = rect.top + (rect.height / 2);
       const distance = Math.hypot(dropX - slotCenterX, dropY - slotCenterY);
+
+      const threshold = isTouch
+        ? Math.max(SNAP_THRESHOLD_TOUCH, rect.width * 0.6)
+        : SNAP_THRESHOLD;
 
       if (distance < threshold && distance < bestDistance) {
         bestDistance = distance;
@@ -1235,8 +1295,6 @@ class GameManager {
     this._levelComplete = false;
     this._currentScore = 0;
     this._assets.play('bg');
-    // Notify SCORM layer that a new session has started
-    document.dispatchEvent(new CustomEvent('game:start'));
     this._loadLevel(this._levelIndex);
   }
 
@@ -1254,10 +1312,6 @@ class GameManager {
     } else {
       this._ui.releaseModuleMedia();
       this._assets.evictImageCacheExcept(null);
-      // Notify SCORM layer: all modules complete, pass final score
-      document.dispatchEvent(new CustomEvent('game:complete', {
-        detail: { score: this._currentScore, maxScore: 100 }
-      }));
       this._ui.showFinal(this._currentScore);
     }
   }
@@ -1295,12 +1349,12 @@ class GameManager {
     );
 
     this._puzzleMgr = new PuzzleManager(this._board, this._tray, this._pieceCtrl);
-    this._puzzleMgr.onProgress((snapped, total) => this._ui.updateProgress(snapped, total));
+
     this._puzzleMgr.onComplete(() => this._handleLevelComplete(levelCfg));
 
     this._puzzleMgr.build(levelCfg);
     this._ui.setLevel(levelCfg, this._puzzleMgr.total);
-    this._ui.updateProgress(0, this._puzzleMgr.total);
+
     this._ui.showScreen('game');
   }
 
@@ -1323,19 +1377,8 @@ class GameManager {
     this._levelComplete = true;
     this._currentScore += (levelCfg.points || 0);
     console.log(`Score Submitted: ${this._currentScore} / 100 points`);
-
+    
     this._assets.play('success');
-
-    // Notify SCORM layer of per-level completion
-    document.dispatchEvent(new CustomEvent('game:levelComplete', {
-      detail: {
-        levelId:      levelCfg.id,
-        levelLabel:   levelCfg.label,
-        levelPoints:  levelCfg.points || 0,
-        runningScore: this._currentScore,
-        maxScore:     100,
-      }
-    }));
 
     setTimeout(() => {
       this._ui.showComplete(levelCfg);

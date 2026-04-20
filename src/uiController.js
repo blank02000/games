@@ -25,10 +25,7 @@ export class UIController {
     this._infoPieces = document.getElementById('info-pieces');
     this._infoThreat = document.getElementById('info-threat');
 
-    this._progressFill = document.getElementById('progress-fill');
-    this._piecesRemaining = document.getElementById('pieces-remaining');
-    this._hudPercent = document.getElementById('hud-percent');
-    this._progressCopy = document.getElementById('hud-progress-copy');
+
     this._objectiveCopy = document.getElementById('objective-copy');
     this._interactionHint = document.getElementById('interaction-hint');
     this._stageTopic = document.getElementById('stage-topic');
@@ -135,22 +132,7 @@ export class UIController {
     this._interactionHint.textContent = this._getInteractionHint(levelCfg.hint);
   }
 
-  updateProgress(snapped, total) {
-    const pct = total ? Math.round((snapped / total) * 100) : 0;
-    const remaining = Math.max(total - snapped, 0);
 
-    this._progressFill.style.width = `${pct}%`;
-    this._progressFill.setAttribute('aria-valuenow', pct);
-    this._piecesRemaining.textContent = `${remaining} remaining`;
-    this._hudPercent.textContent = `${pct}%`;
-    this._progressCopy.textContent = `${snapped} of ${total} fragments locked`;
-
-    if (snapped === 0) {
-      this._statusText.textContent = 'RECOVERY ACTIVE';
-    } else if (snapped < total) {
-      this._statusText.textContent = `RECOVERY ${pct}%`;
-    }
-  }
 
   showComplete(levelCfg) {
     this._revealImg.src = levelCfg.image;
@@ -219,8 +201,6 @@ export class UIController {
     this._levelBadge.hidden = true;
     this._statusText.textContent = 'FULLY OPERATIONAL';
     this._stageTopic.textContent = 'System restored';
-    this._hudPercent.textContent = '100%';
-    this._progressCopy.textContent = 'All fragments secured';
 
     const scoreDisplay = document.getElementById('final-score-display');
     if (scoreDisplay) {
@@ -234,8 +214,6 @@ export class UIController {
     this._levelBadge.hidden = true;
     this._statusText.textContent = 'STANDBY';
     this._stageTopic.textContent = 'Awaiting recovery';
-    this._hudPercent.textContent = '0%';
-    this._progressCopy.textContent = '0 of 0 fragments locked';
     this._objectiveCopy.textContent = 'Align every fragment with its matching board position to restore the active module.';
     this._interactionHint.textContent = 'Drag pieces from the tray and release them near the matching slot.';
   }

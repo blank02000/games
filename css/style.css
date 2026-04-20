@@ -37,7 +37,7 @@
    ============================================================= */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { height: 100%; }
+html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
 
 body {
   font-family: var(--font-body);
@@ -160,10 +160,14 @@ button {
    APP WRAPPER
    ============================================================= */
 #app {
-  position: relative;
-  width: 100%;
-  height: var(--app-height);
+  width: 100vw;
+  height: 100vh;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   padding-top: 48px; /* HUD offset */
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   z-index: 1;
 }
@@ -286,7 +290,7 @@ button {
    GAME SCREEN LAYOUT
    ============================================================= */
 #screen-game {
-  padding: 0.75rem;
+  padding: clamp(10px, 2vw, 24px);
   gap: 0.5rem;
   overflow: hidden;      /* inner panels scroll if needed */
 }
@@ -392,7 +396,7 @@ button {
    PUZZLE BOARD
    ============================================================= */
 .board-frame {
-  flex: 1.2;
+  flex: 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -401,6 +405,7 @@ button {
   border-radius: var(--radius);
   padding: 0.5rem;
   overflow: hidden;
+  container-type: size;
 }
 
 .puzzle-board {
@@ -408,8 +413,8 @@ button {
   gap: 2px;
   background: #000;
   border: 2px solid var(--border-solid);
-  width: 100%;
-  max-width: 420px;
+  width: min(100cqw, calc(100cqh * (var(--board-cols, 1) / var(--board-rows, 1))));
+  max-width: 900px;
   aspect-ratio: 1;   /* default square; overridden by JS via CSS variables if needed */
 }
 
@@ -589,7 +594,7 @@ body.is-dragging * { cursor: grabbing !important; }
   justify-content: center;
   padding: 1.5rem;
   gap: 1.25rem;
-  max-width: 540px;
+  max-width: 1200px; /* Expanded for full width */
   margin: 0 auto;
   width: 100%;
 }
@@ -630,7 +635,7 @@ body.is-dragging * { cursor: grabbing !important; }
 
 .reveal-frame {
   width: 100%;
-  max-width: 340px;
+  max-width: 600px; /* Expanded from 340px */
   border-radius: var(--radius);
   overflow: hidden;
   border: 2px solid var(--border-solid);
@@ -643,54 +648,27 @@ body.is-dragging * { cursor: grabbing !important; }
 }
 
 .tip-text {
-  font-size: 0.82rem;
+  font-size: 0.95rem; /* Slightly larger text for wider container */
   color: var(--text);
   line-height: 1.6;
   white-space: pre-line;
   text-align: left;
   background: var(--bg-card);
   border-left: 3px solid var(--accent);
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.5rem;
   border-radius: 0 var(--radius) var(--radius) 0;
-  max-width: 420px;
+  max-width: 800px; /* Expanded from 420px */
   width: 100%;
-}
-
-.video-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-  display: inline-block;
 }
 
 .reward-video {
   width: 100%;
+  max-width: 900px; /* Expanded from 380px */
   display: block;
   border-radius: var(--radius);
   border: 2px solid var(--border-solid);
   box-shadow: var(--shadow);
 }
-
-/* Mute / unmute overlay button on the reward video */
-.video-mute-btn {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-size: 1rem;
-  line-height: 1;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.18s, transform 0.15s;
-  z-index: 10;
-}
-.video-mute-btn:hover  { background: rgba(0,0,0,0.8); transform: scale(1.08); }
-.video-mute-btn:active { transform: scale(0.96); }
 
 /* Carousel dots */
 .carousel-dots {
@@ -867,6 +845,11 @@ body.is-dragging * { cursor: grabbing !important; }
     flex: none;
     /* No max-height cap — board renders at natural grid aspect ratio */
     max-height: none;
+    container-type: normal;
+  }
+
+  .puzzle-board {
+    width: 100%;
   }
 
   .tray-panel {
@@ -874,12 +857,4 @@ body.is-dragging * { cursor: grabbing !important; }
     min-height: 140px;
     max-height: none;   /* all pieces visible, user scrolls down */
   }
-}
-
-/* =============================================================
-   DESKTOP: wider max-width
-   ============================================================= */
-@media (min-width: 900px) {
-  #app { max-width: 900px; margin: 0 auto; }
-  .puzzle-board { max-width: 500px; }
 }

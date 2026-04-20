@@ -96,12 +96,12 @@ export class GameManager {
     );
 
     this._puzzleMgr = new PuzzleManager(this._board, this._tray, this._pieceCtrl);
-    this._puzzleMgr.onProgress((snapped, total) => this._ui.updateProgress(snapped, total));
+
     this._puzzleMgr.onComplete(() => this._handleLevelComplete(levelCfg));
 
     this._puzzleMgr.build(levelCfg);
     this._ui.setLevel(levelCfg, this._puzzleMgr.total);
-    this._ui.updateProgress(0, this._puzzleMgr.total);
+
     this._ui.showScreen('game');
   }
 
