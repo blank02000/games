@@ -132,25 +132,29 @@ export class GameManager {
   _startTimer(levelCfg) {
     this._elapsedSeconds = 0;
     const target = levelCfg.targetTime || 30;
-    this._nextPenaltyAt = target + (levelCfg.penaltyEvery || 10);
+    const penaltyEvery = levelCfg.penaltyEvery || 10;
+    const penaltyAmount = levelCfg.penaltyAmount || 5;
+    this._nextPenaltyAt = target + penaltyEvery;
 
-    // Immediately render 0:00
-    this._ui.updateTimer(target, false, false);
+    // Show initial time BEFORE the first tick so it's never "0:00" at start
+    if (this._ui._infoTimer) {
+      this._ui._infoTimer.textContent = this._ui._formatTime(target);
+      this._ui._infoTimer.classList.remove('timer-urgent', 'timer-overtime');
+    }
 
     this._timerInterval = setInterval(() => {
       this._elapsedSeconds += 1;
       const remaining = target - this._elapsedSeconds;
-      const overtime = remaining < 0;
-      const urgent = remaining <= 10 && remaining > 0;
+      const overtime  = remaining < 0;
+      const urgent    = !overtime && remaining <= 10;
 
-      // Display: count down to 00:00, then hold at 00:00 (overtime handled by score)
-      const displaySeconds = overtime ? 0 : remaining;
-      this._ui.updateTimer(displaySeconds, urgent, overtime);
+      // Count down to 0:00, then lock at 0:00 in OT state
+      this._ui.updateTimer(overtime ? 0 : remaining, urgent, overtime);
 
-      // Overtime penalty
+      // Fire penalty for every N overtime seconds
       if (overtime && this._elapsedSeconds >= this._nextPenaltyAt) {
-        this._nextPenaltyAt += (levelCfg.penaltyEvery || 10);
-        this._applyPenalty(levelCfg.penaltyAmount || 5);
+        this._nextPenaltyAt += penaltyEvery;
+        this._applyPenalty(penaltyAmount);
       }
     }, 1000);
   }
