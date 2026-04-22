@@ -154,10 +154,17 @@
             </div>
           </div>
 
-          <!-- Slide 2: Security tip + video -->
+          <!-- Slide 2: Security Advice -->
           <div class="carousel-slide" role="tabpanel">
             <div class="slide-icon" aria-hidden="true">📋</div>
-            <h2 class="slide-title">Security Insight</h2>
+            <h2 class="slide-title">Security Advice</h2>
+            <p id="tip-text" class="tip-text"></p>
+          </div>
+
+          <!-- Slide 3: Video -->
+          <div class="carousel-slide" role="tabpanel">
+            <div class="slide-icon" aria-hidden="true">🎬</div>
+            <h2 class="slide-title">Incident Replay</h2>
             <video
               id="reward-video"
               class="reward-video"
@@ -165,7 +172,6 @@
               controls
               aria-label="Incident replay video"
             ></video>
-            <p id="tip-text" class="tip-text"></p>
           </div>
 
         </div><!-- /.carousel -->
@@ -174,6 +180,7 @@
         <div class="carousel-dots" role="tablist" aria-label="Slide navigation">
           <button class="carousel-dot carousel-dot--active" role="tab" aria-pressed="true" aria-label="Slide 1"></button>
           <button class="carousel-dot" role="tab" aria-pressed="false" aria-label="Slide 2"></button>
+          <button class="carousel-dot" role="tab" aria-pressed="false" aria-label="Slide 3"></button>
         </div>
 
         <div class="complete-actions">

@@ -46,9 +46,11 @@ export class UIController {
       this.btnCloseGame.addEventListener('click', () => window.close());
     }
 
-    // Auto-scroll to top when reward video ends
+    // Auto-scroll to top when reward video ends and enable next button
     if (this._rewardVideo) {
       this._rewardVideo.addEventListener('ended', () => {
+        this.btnNext.disabled = false;
+        
         // Try every scrollable ancestor until one works
         const wrap = document.querySelector('.complete-wrap');
         if (wrap) wrap.scrollTo({ top: 0, behavior: 'smooth' });
@@ -259,15 +261,20 @@ export class UIController {
     this._showSlide(index);
 
     if (index === this._totalSlides - 1) {
-      // Last slide: show appropriate CTA
+      // Last slide: show appropriate CTA but disable until video finishes
+      this.btnNext.disabled = true;
       this.btnNext.textContent = this._isFinalLevel
         ? '🏆 Complete Mission'
         : 'Proceed to Next Module';
 
       setTimeout(() => {
-        this._rewardVideo.play().catch(() => {});
+        this._rewardVideo.play().catch(() => {
+          // If autoplay fails, re-enable to prevent soft-lock
+          this.btnNext.disabled = false;
+        });
       }, 300);
     } else {
+      this.btnNext.disabled = false;
       this._rewardVideo.pause();
       this.btnNext.textContent = 'Continue';
     }
